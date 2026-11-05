@@ -1,0 +1,1554 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Fillcard</title>
+<meta name="description" content="Lash maps, client records and refill cards for lash artists. Free, private, works on any phone.">
+<meta name="theme-color" content="#FAF6F2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#151012" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Fillcard">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#FAF6F2; --surface:#FFFFFF; --surface-2:#F5EEE8; --ink:#231B1D; --ink-2:#54474A; --muted:#8A7B7E; --line:#EDE4DE;
+  --accent:#B4536A; --accent-ink:#FFFFFF; --gold:#B98D5F;
+  --ok:#3F8A5F; --warn:#C27A1A; --bad:#C2453E;
+  --sh-1:0 1px 2px rgba(60,32,38,.05),0 3px 10px rgba(60,32,38,.04);
+  --sh-2:0 22px 44px -22px rgba(90,40,52,.38),0 6px 14px -8px rgba(90,40,52,.14);
+  --glass:rgba(255,255,255,.72);
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#151012; --surface:#211A1C; --surface-2:#2A2225; --ink:#F5EDEA; --ink-2:#D8CBC8; --muted:#A5979A; --line:#352B2E;
+    --ok:#7CC9A0; --warn:#E9B565; --bad:#F08A80; --gold:#D6B183;
+    --sh-1:none; --sh-2:0 22px 44px -22px rgba(0,0,0,.7); --glass:rgba(33,26,28,.72);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#151012; --surface:#211A1C; --surface-2:#2A2225; --ink:#F5EDEA; --ink-2:#D8CBC8; --muted:#A5979A; --line:#352B2E;
+  --ok:#7CC9A0; --warn:#E9B565; --bad:#F08A80; --gold:#D6B183;
+  --sh-1:none; --sh-2:0 22px 44px -22px rgba(0,0,0,.7); --glass:rgba(33,26,28,.72);
+  color-scheme:dark;
+}
+:root{
+  --soft:color-mix(in srgb,var(--accent) 12%,var(--surface));
+  --ok-soft:color-mix(in srgb,var(--ok) 14%,var(--surface)); --warn-soft:color-mix(in srgb,var(--warn) 15%,var(--surface)); --bad-soft:color-mix(in srgb,var(--bad) 13%,var(--surface));
+  --hero:radial-gradient(120% 140% at 100% 0%,color-mix(in srgb,var(--accent) 50%,#fff) 0%,transparent 52%),linear-gradient(145deg,var(--accent),color-mix(in srgb,var(--accent) 52%,#1c0a10));
+  --r:22px; --ease:cubic-bezier(.2,.8,.2,1); --spring:cubic-bezier(.34,1.45,.64,1);
+  --serif:"Fraunces",ui-serif,Georgia,serif; --sans:"Inter",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0}
+body{
+  background:radial-gradient(900px 520px at 110% -8%,color-mix(in srgb,var(--accent) 13%,transparent),transparent 62%),
+             radial-gradient(800px 480px at -20% 108%,color-mix(in srgb,var(--gold) 12%,transparent),transparent 60%),var(--bg);
+  background-attachment:fixed;color:var(--ink);font:15px/1.45 var(--sans);-webkit-font-smoothing:antialiased;min-height:100vh;
+  padding-bottom:calc(112px + env(safe-area-inset-bottom));font-variant-numeric:tabular-nums;
+}
+body.focus,body.client-mode{padding-bottom:0}
+body.focus .tabbar,body.focus .top,body.client-mode .tabbar,body.client-mode .top{display:none}
+button,input,select,textarea{font:inherit;color:inherit}
+a{color:var(--accent)}
+.wrap{max-width:680px;margin:0 auto;padding:0 16px}
+.ic{flex:none;display:block}
+
+/* motion */
+@keyframes viewIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes rise{from{opacity:0;transform:translateY(14px) scale(.985)}to{opacity:1;transform:none}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes lashGrow{to{stroke-dashoffset:0}}
+@keyframes pulse{0%,100%{opacity:.35;transform:scale(1)}50%{opacity:.12;transform:scale(1.25)}}
+@keyframes sheetUp{from{transform:translateY(100%)}to{transform:none}}
+@keyframes sheetDown{to{transform:translateY(100%)}}
+@keyframes popIn{0%{opacity:0;transform:scale(.6)}100%{opacity:1;transform:none}}
+@keyframes cardIn{from{opacity:0;transform:perspective(900px) rotateX(14deg) translateY(30px) scale(.94)}to{opacity:1;transform:none}}
+@keyframes slideL{from{opacity:0;transform:translateX(28px)}to{opacity:1;transform:none}}
+@keyframes slideR{from{opacity:0;transform:translateX(-28px)}to{opacity:1;transform:none}}
+@keyframes hand{0%,100%{transform:translateY(6px)}50%{transform:translateY(-10px)}}
+@keyframes shimmer{from{background-position:-200% 0}to{background-position:200% 0}}
+.view{animation:viewIn .38s var(--ease) both}
+.rise{animation:rise .55s var(--ease) both;animation-delay:calc(var(--i,0) * 45ms)}
+.press{transition:transform .18s var(--ease),box-shadow .2s,background-color .2s,border-color .2s}
+.press:active{transform:scale(.965)}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-delay:0ms!important;transition-duration:.01ms!important}}
+
+/* chrome */
+.top{position:sticky;top:0;z-index:5;background:color-mix(in srgb,var(--bg) 78%,transparent);backdrop-filter:blur(14px) saturate(1.3);-webkit-backdrop-filter:blur(14px) saturate(1.3)}
+.top .wrap{display:flex;align-items:center;gap:10px;height:58px}
+.brand{font:600 21px/1 var(--serif);letter-spacing:-.01em;display:flex;align-items:center;gap:9px;text-decoration:none;color:var(--ink)}
+.brand svg{width:30px;height:30px;filter:drop-shadow(0 4px 8px color-mix(in srgb,var(--accent) 35%,transparent))}
+.spacer{flex:1}
+.iconbtn{appearance:none;border:1px solid var(--line);background:var(--surface);width:42px;height:42px;border-radius:14px;display:grid;place-items:center;cursor:pointer;color:var(--ink-2)}
+.tabbar{position:fixed;left:12px;right:12px;bottom:calc(10px + env(safe-area-inset-bottom));z-index:6;max-width:520px;margin:0 auto;background:var(--glass);
+  backdrop-filter:blur(20px) saturate(1.5);-webkit-backdrop-filter:blur(20px) saturate(1.5);border:1px solid var(--line);border-radius:26px;box-shadow:var(--sh-2);display:grid;grid-template-columns:repeat(4,1fr);height:68px}
+.tab{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:11px;font-weight:600;color:var(--muted);text-decoration:none;position:relative;transition:color .2s}
+.tab::after{content:"";position:absolute;bottom:7px;width:4px;height:4px;border-radius:50%;background:var(--accent);transform:scale(0);transition:transform .3s var(--spring)}
+.tab[aria-current="page"]{color:var(--accent)}
+.tab[aria-current="page"]::after{transform:scale(1)}
+.tab.fab{color:var(--ink-2)}
+.tab.fab::after{display:none}
+.tab.fab .dot{width:54px;height:54px;border-radius:19px;background:var(--hero);color:#fff;display:grid;place-items:center;transform:translateY(-16px);box-shadow:0 14px 26px -10px color-mix(in srgb,var(--accent) 80%,transparent);transition:transform .25s var(--spring)}
+.tab.fab:active .dot{transform:translateY(-16px) scale(.92)}
+.tab.fab span.lbl{margin-top:-14px}
+
+/* type */
+h1{font:600 30px/1.1 var(--serif);letter-spacing:-.02em;margin:18px 0 4px}
+h1 em{font-style:italic;font-weight:500;color:var(--accent)}
+h2{font:600 19px/1.2 var(--serif);letter-spacing:-.01em;margin:0 0 10px}
+.eyebrow{font-size:11px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+h3.eyebrow{margin:24px 4px 10px;display:flex;align-items:center;gap:8px}
+h3.eyebrow .count{background:var(--surface-2);color:var(--ink-2);border-radius:999px;padding:1px 8px;font-size:11px;letter-spacing:0}
+.sub{color:var(--muted);margin:0 0 16px}
+.muted{color:var(--muted)} .small{font-size:13px} .grow{flex:1;min-width:0}
+.row{display:flex;align-items:center;gap:10px} .row.wrapr{flex-wrap:wrap}
+
+/* surfaces */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh-1);padding:16px;margin:0 0 12px}
+.card.tight{padding:6px 14px}
+.hero{position:relative;overflow:hidden;background:var(--hero);color:#fff;border-radius:28px;padding:22px 20px;margin:4px 0 14px;box-shadow:var(--sh-2)}
+.hero .deco{position:absolute;right:-30px;bottom:-34px;width:210px;opacity:.18;pointer-events:none}
+.hero .eyebrow{color:rgba(255,255,255,.78)}
+.hero .big{font:600 44px/1 var(--serif);letter-spacing:-.02em;margin:8px 0 4px}
+.hero p{margin:0 0 16px;color:rgba(255,255,255,.88);max-width:30ch}
+.btn{appearance:none;border:1px solid var(--line);background:var(--surface);border-radius:15px;padding:11px 16px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:46px;text-decoration:none;color:var(--ink);white-space:nowrap;line-height:1.15}
+.btn.primary{background:var(--hero);border-color:transparent;color:#fff;box-shadow:0 12px 22px -12px color-mix(in srgb,var(--accent) 85%,transparent)}
+.btn.white{background:#fff;color:#231B1D;border-color:transparent}
+.btn.glass{background:rgba(255,255,255,.16);color:#fff;border-color:rgba(255,255,255,.28)}
+.btn.ghost{background:transparent;border-color:transparent}
+.btn.sm{min-height:36px;padding:7px 12px;font-size:13px;border-radius:12px}
+.btn.block{width:100%}
+.btn.danger{color:var(--bad)}
+.btn.lg{min-height:56px;font-size:16px;border-radius:18px}
+.btn:disabled{opacity:.45;pointer-events:none}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid2>.btn{white-space:normal;text-align:center}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+@media (max-width:420px){.grid3.fields{grid-template-columns:1fr 1fr}}
+.chips{display:flex;flex-wrap:wrap;gap:7px}
+.chip{appearance:none;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:8px 14px;font-size:13.5px;font-weight:600;cursor:pointer;min-height:40px;transition:all .22s var(--ease);color:var(--ink-2)}
+.chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--bg);transform:scale(1.03)}
+.seg{display:flex;background:var(--surface-2);border-radius:16px;padding:4px;gap:4px;position:relative}
+.seg button{flex:1;appearance:none;border:0;background:transparent;border-radius:12px;padding:9px 6px;font-weight:600;font-size:13px;cursor:pointer;min-height:40px;color:var(--muted);transition:all .25s var(--ease)}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:var(--sh-1),0 0 0 1px var(--line)}
+.field{display:block;margin:0 0 12px}
+.field>span{display:block;font-size:12.5px;font-weight:600;margin:0 0 6px;color:var(--ink-2)}
+.field .hint{font-weight:400;color:var(--muted)}
+input[type=text],input[type=tel],input[type=url],input[type=date],input[type=number],input[type=search],input[type=email],input[type=time],select,textarea{width:100%;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 13px;min-height:48px;outline:none;transition:border-color .2s,box-shadow .2s}
+textarea{min-height:88px;resize:vertical;line-height:1.45}
+input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 16%,transparent)}
+.search{position:relative}.search .ic{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--muted)}
+.search input{padding-left:42px;border-radius:16px}
+
+/* stats */
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:0 0 6px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:13px 12px;box-shadow:var(--sh-1)}
+.stat b{display:block;font:600 24px/1.05 var(--serif);letter-spacing:-.01em}
+.stat span{font-size:11.5px;color:var(--muted);font-weight:500}
+.stats.four{grid-template-columns:repeat(2,1fr)}
+@media (min-width:560px){.stats.four{grid-template-columns:repeat(4,1fr)}}
+
+/* lists */
+.item{display:flex;align-items:center;gap:12px;padding:12px 2px;border-top:1px solid var(--line);text-decoration:none;color:inherit;border-radius:14px;transition:background-color .2s}
+.item:first-child{border-top:0}
+.item a{text-decoration:none}
+a.item:active{background:var(--surface-2)}
+.name{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.meta{font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pill{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:700;padding:4px 9px;border-radius:999px;background:var(--surface-2);color:var(--ink-2);white-space:nowrap}
+.pill.bad{background:var(--bad-soft);color:var(--bad)} .pill.warn{background:var(--warn-soft);color:var(--warn)} .pill.ok{background:var(--ok-soft);color:var(--ok)} .pill.accent{background:var(--soft);color:var(--accent)}
+.pill i{width:6px;height:6px;border-radius:50%;background:currentColor}
+.ava{position:relative;display:grid;place-items:center;flex:none;text-decoration:none}
+.ava svg{position:absolute;inset:0;width:100%;height:100%}
+.ava .trk{fill:none;stroke:var(--line);stroke-width:3}
+.ava .prg{fill:none;stroke-width:3;stroke-linecap:round;transition:stroke-dashoffset 1.1s var(--ease)}
+.ava b{position:relative;width:calc(100% - 10px);height:calc(100% - 10px);border-radius:50%;background:var(--soft);color:var(--accent);display:grid;place-items:center;font-weight:700;letter-spacing:.02em}
+.qbtn{appearance:none;border:0;background:var(--soft);color:var(--accent);width:40px;height:40px;border-radius:13px;display:grid;place-items:center;cursor:pointer;flex:none}
+.qbtn.done{background:var(--ok-soft);color:var(--ok)}
+.empty{text-align:center;padding:22px 10px;color:var(--muted)}
+.empty svg{width:64px;margin:0 auto 8px;display:block;opacity:.7}
+.fab-add{position:fixed;right:20px;bottom:calc(96px + env(safe-area-inset-bottom));z-index:5}
+
+/* lash map */
+.map{width:100%;height:auto;display:block;overflow:visible}
+.map .lid{fill:none;stroke:var(--ink);stroke-width:2.4;stroke-linecap:round}
+.map .lower{fill:none;stroke:var(--line);stroke-width:2;stroke-dasharray:4 5}
+.map .lash{fill:none;stroke-linecap:round;transition:opacity .25s}
+.map .zonehit{fill:transparent}
+.map [data-zone]{cursor:ns-resize;touch-action:none}
+.map .lbl circle.c{fill:var(--surface);stroke:var(--line);stroke-width:1.5;transition:fill .2s}
+.map .lbl text{font:700 11px var(--sans);fill:var(--ink);text-anchor:middle;dominant-baseline:central;pointer-events:none}
+.map .lbl.sel circle.c{fill:var(--ink);stroke:var(--ink)}
+.map .lbl.sel text{fill:var(--bg)}
+.map .halo{fill:var(--accent);opacity:.3;transform-box:fill-box;transform-origin:center;animation:pulse 1.8s ease-in-out infinite}
+.map .cap{font:600 9.5px var(--sans);fill:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+.map.grow .lash{stroke-dasharray:1;stroke-dashoffset:1;animation:lashGrow .7s var(--ease) forwards;animation-delay:calc(var(--d) * 9ms)}
+.map.grow .lbl{opacity:0;animation:popIn .45s var(--spring) forwards;animation-delay:calc(.35s + var(--d) * 40ms)}
+.mapwrap{position:relative;background:radial-gradient(70% 90% at 50% 70%,var(--surface-2),transparent 70%);border-radius:18px;margin:2px -4px 0}
+.hint{position:absolute;left:0;right:0;margin:0 auto;width:max-content;top:6px;display:flex;align-items:center;gap:6px;background:var(--ink);color:var(--bg);font-size:12px;font-weight:600;padding:6px 11px;border-radius:999px;white-space:nowrap;animation:popIn .5s var(--spring) .9s both;pointer-events:none}
+.hint .ic{animation:hand 1.4s ease-in-out infinite}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:12px;color:var(--muted);margin-top:6px}
+.legend i{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.zones{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:6px;margin-top:12px}
+.zonebtn{min-width:0;appearance:none;border:1px solid var(--line);background:var(--surface);border-radius:14px;padding:7px 2px;cursor:pointer;text-align:center;min-height:56px;transition:all .22s var(--ease)}
+.zonebtn b{display:block;font:600 17px/1.1 var(--serif)}
+.zonebtn small{font-size:10.5px;font-weight:700;display:inline-flex;align-items:center;gap:3px;color:var(--muted)}
+.zonebtn small i{width:6px;height:6px;border-radius:50%}
+.zonebtn[aria-pressed="true"]{border-color:var(--ink);background:var(--ink);color:var(--bg);transform:translateY(-3px);box-shadow:var(--sh-2)}
+.zonebtn[aria-pressed="true"] small{color:color-mix(in srgb,var(--bg) 75%,transparent)}
+.stepper{display:flex;align-items:center;gap:6px;background:var(--surface-2);border-radius:16px;padding:4px}
+.stepper button{appearance:none;border:0;background:var(--surface);width:44px;height:44px;border-radius:12px;font-size:22px;cursor:pointer;box-shadow:var(--sh-1);display:grid;place-items:center;color:var(--ink)}
+.stepper output{min-width:70px;text-align:center;font:600 22px var(--serif)}
+.curls{display:grid;grid-template-columns:repeat(8,1fr);gap:6px}
+@media (max-width:400px){.curls{grid-template-columns:repeat(4,1fr)}}
+.curl{appearance:none;border:1px solid var(--line);background:var(--surface);border-radius:14px;padding:6px 0 5px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:1px;font-weight:700;font-size:12px;transition:all .22s var(--ease)}
+.curl svg{width:22px;height:22px}
+.curl[aria-pressed="true"]{border-color:currentColor;background:color-mix(in srgb,currentColor 12%,var(--surface));transform:translateY(-2px)}
+.presets{display:flex;gap:10px;overflow-x:auto;padding:4px 2px 8px;margin:0 -16px;padding-left:16px;padding-right:16px;scroll-snap-type:x mandatory;scrollbar-width:none}
+.presets::-webkit-scrollbar{display:none}
+.preset{flex:0 0 112px;scroll-snap-align:start;appearance:none;border:1px solid var(--line);background:var(--surface);border-radius:18px;padding:8px 8px 9px;cursor:pointer;text-align:center;font-weight:600;font-size:12.5px;transition:all .25s var(--ease)}
+.preset .map{margin:-4px 0 2px}
+.preset[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent) inset;color:var(--accent)}
+details.more summary{cursor:pointer;font-size:13px;font-weight:600;color:var(--muted);list-style:none;padding:8px 0}
+details.more summary::-webkit-details-marker{display:none}
+
+/* wizard */
+.wiz-head{position:sticky;top:0;z-index:5;background:color-mix(in srgb,var(--bg) 82%,transparent);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);padding:10px 0 12px;margin:0 -16px 6px;padding-left:16px;padding-right:16px}
+.wiz-title{font:600 18px/1.2 var(--serif);text-align:center}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.steps button{appearance:none;border:0;background:none;padding:0;cursor:pointer;text-align:left;color:var(--muted);font-size:11.5px;font-weight:700;letter-spacing:.04em}
+.steps button .bar{display:block;height:4px;border-radius:4px;background:var(--line);margin-bottom:6px;overflow:hidden}
+.steps button .bar i{display:block;height:100%;width:0;background:var(--hero);border-radius:4px;transition:width .45s var(--ease)}
+.steps button.done .bar i,.steps button.on .bar i{width:100%}
+.steps button.on{color:var(--ink)}
+.stepbody.fwd{animation:slideL .4s var(--ease) both}.stepbody.back{animation:slideR .4s var(--ease) both}
+.wiz-foot{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--glass);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid var(--line);padding:12px 16px calc(12px + env(safe-area-inset-bottom))}
+.wiz-foot .wrap{display:flex;gap:10px;padding:0}
+.wiz-pad{height:110px}
+.flag{background:var(--bad-soft);color:var(--bad);border-radius:16px;padding:11px 13px;font-size:13px;font-weight:600;margin:0 0 12px;display:flex;gap:8px;align-items:center}
+.note{background:var(--soft);border-radius:16px;padding:11px 13px;font-size:13px;margin:0 0 12px;display:flex;gap:9px;align-items:center;color:var(--ink-2)}
+.note .ic{color:var(--accent)}
+.photos{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.photo{aspect-ratio:4/5;border:1.5px dashed var(--line);border-radius:18px;display:grid;place-items:center;overflow:hidden;position:relative;cursor:pointer;background:var(--surface-2);color:var(--muted);font-size:13px;font-weight:600;text-align:center}
+.photo .ph{display:flex;flex-direction:column;align-items:center;gap:6px}
+.photo img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0;animation:fadeIn .4s ease}
+.photo input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.photo .tag{position:absolute;left:10px;top:10px;z-index:1;background:rgba(0,0,0,.5);backdrop-filter:blur(6px);color:#fff;font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;text-transform:capitalize}
+.range input{width:100%;-webkit-appearance:none;appearance:none;height:8px;border-radius:8px;background:linear-gradient(90deg,var(--accent) var(--v,50%),var(--line) var(--v,50%));outline:none}
+.range input::-webkit-slider-thumb{-webkit-appearance:none;width:28px;height:28px;border-radius:50%;background:#fff;border:0;box-shadow:0 2px 8px rgba(0,0,0,.25),0 0 0 4px color-mix(in srgb,var(--accent) 30%,transparent)}
+.range input::-moz-range-thumb{width:28px;height:28px;border-radius:50%;background:#fff;border:0;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+.retval{font:600 36px/1 var(--serif);text-align:center;margin:4px 0 12px}
+.retval small{display:block;font:600 12px var(--sans);color:var(--muted);margin-top:6px}
+.duebox{display:flex;align-items:center;gap:14px;background:var(--surface-2);border-radius:18px;padding:12px 14px;margin-top:12px}
+.calchip{width:54px;flex:none;border-radius:13px;overflow:hidden;background:var(--surface);box-shadow:var(--sh-1);text-align:center}
+.calchip span{display:block;background:var(--accent);color:#fff;font-size:10px;font-weight:700;letter-spacing:.08em;padding:3px 0}
+.calchip b{display:block;font:600 22px/1.4 var(--serif)}
+
+/* client page */
+.prof{display:flex;flex-direction:column;align-items:center;text-align:center;margin:8px 0 14px}
+.prof h1{margin:10px 0 6px}
+.qa{display:flex;justify-content:center;gap:12px;margin:4px 0 16px;flex-wrap:wrap}
+.qa a,.qa button{appearance:none;border:0;background:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:5px;font-size:11.5px;font-weight:600;color:var(--ink-2);text-decoration:none;min-width:58px}
+.qa .qi{width:48px;height:48px;border-radius:16px;background:var(--surface);border:1px solid var(--line);display:grid;place-items:center;color:var(--accent);box-shadow:var(--sh-1);transition:transform .2s var(--spring)}
+.qa a:active .qi,.qa button:active .qi{transform:scale(.9)}
+.chart{width:100%;height:auto;display:block}
+.chart .ln{fill:none;stroke:var(--accent);stroke-width:2.5;stroke-linejoin:round;stroke-linecap:round}
+.chart .pt{fill:var(--surface);stroke:var(--accent);stroke-width:2.5}
+.chart .pl{font:700 10px var(--sans);fill:var(--ink-2);text-anchor:middle}
+.chart .ref{stroke:var(--line);stroke-dasharray:3 4}
+.timeline{position:relative;padding-left:18px}
+.timeline::before{content:"";position:absolute;left:5px;top:10px;bottom:10px;width:2px;background:var(--line);border-radius:2px}
+.tl{position:relative;display:flex;gap:12px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:10px 12px;margin:0 0 10px;text-decoration:none;color:inherit;box-shadow:var(--sh-1)}
+.tl::before{content:"";position:absolute;left:-18px;top:50%;width:12px;height:12px;margin-top:-6px;border-radius:50%;background:var(--surface);border:3px solid var(--accent)}
+.tl .mini{width:86px;flex:none}
+
+/* card screen */
+.cardprev{width:100%;height:auto;border-radius:22px;display:block;box-shadow:var(--sh-2);animation:cardIn .8s var(--spring) both;background:var(--surface-2)}
+.skeleton{aspect-ratio:4/5;border-radius:22px;background:linear-gradient(90deg,var(--surface-2) 25%,var(--surface) 50%,var(--surface-2) 75%);background-size:200% 100%;animation:shimmer 1.2s linear infinite}
+.kv{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.kv div{background:var(--surface-2);border-radius:14px;padding:10px 12px}
+.kv span{display:block;font-size:10.5px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.kv b{font-weight:600;font-size:14px}
+
+/* sheet */
+dialog{border:0;padding:0;background:var(--surface);color:var(--ink);width:100%;max-width:560px;max-height:88vh;margin:auto auto 0;border-radius:28px 28px 0 0;box-shadow:0 -20px 60px -20px rgba(0,0,0,.35);animation:sheetUp .42s var(--spring)}
+dialog.closing{animation:sheetDown .22s ease-in forwards}
+dialog::backdrop{background:rgba(20,12,15,.45);backdrop-filter:blur(3px);animation:fadeIn .3s ease}
+@media (min-width:700px){dialog{margin:auto;border-radius:28px}}
+.grab{width:40px;height:5px;border-radius:5px;background:var(--line);margin:10px auto 0}
+dialog .dhead{display:flex;align-items:center;justify-content:space-between;padding:10px 18px 0}
+dialog .dhead h2{margin:0}
+dialog .dbody{padding:14px 18px calc(20px + env(safe-area-inset-bottom));overflow:auto}
+.swatches{display:flex;gap:10px;flex-wrap:wrap}
+.sw{appearance:none;width:40px;height:40px;border-radius:50%;border:3px solid var(--surface);box-shadow:0 0 0 1px var(--line);cursor:pointer;transition:transform .2s var(--spring)}
+.sw[aria-pressed="true"]{box-shadow:0 0 0 2px var(--ink);transform:scale(1.1)}
+
+/* toast + sparks */
+.toast{position:fixed;left:50%;top:calc(14px + env(safe-area-inset-top));transform:translate(-50%,-20px) scale(.96);background:var(--ink);color:var(--bg);padding:11px 16px 11px 12px;border-radius:16px;font-weight:600;font-size:14px;opacity:0;transition:all .35s var(--spring);z-index:60;pointer-events:none;max-width:calc(100% - 32px);display:flex;gap:9px;align-items:center;box-shadow:var(--sh-2)}
+.toast.show{opacity:1;transform:translate(-50%,0) scale(1)}
+.toast .tk{width:22px;height:22px;border-radius:50%;background:var(--ok);color:#fff;display:grid;place-items:center;flex:none}
+.spark{position:fixed;width:16px;height:3px;border-radius:3px;pointer-events:none;z-index:70}
+
+/* welcome */
+.welcome{min-height:100vh;display:flex;flex-direction:column;justify-content:center;padding:28px 0 40px}
+.welcome .stage{background:var(--hero);border-radius:32px;padding:20px 18px 6px;box-shadow:var(--sh-2);color:#fff}
+.welcome .stage .map .lid{stroke:#fff}.welcome .stage .map .lash{stroke:rgba(255,255,255,.92)}
+.welcome .stage .map .lbl circle.c{fill:rgba(255,255,255,.18);stroke:rgba(255,255,255,.5)}.welcome .stage .map .lbl text{fill:#fff}.welcome .stage .map .lower{stroke:rgba(255,255,255,.3)}
+.welcome h1{font-size:36px;margin:24px 0 8px}
+.feat{display:flex;gap:12px;align-items:flex-start;margin:14px 0}
+.feat .qi{width:40px;height:40px;border-radius:13px;background:var(--soft);color:var(--accent);display:grid;place-items:center;flex:none}
+.feat b{display:block}
+
+/* client passport */
+.pp{max-width:520px;margin:0 auto;padding:16px 16px 120px}
+.pp .hero{padding:24px 20px 70px;text-align:center}
+.pp .hero h1{color:#fff;margin:6px 0 4px;font-size:32px}
+.ringcard{margin:-58px 14px 14px;text-align:center;position:relative;z-index:1;padding:20px 16px}
+.bigring{width:168px;height:168px;margin:0 auto;position:relative;display:grid;place-items:center}
+.bigring svg{position:absolute;inset:0}
+.bigring .trk{fill:none;stroke:var(--surface-2);stroke-width:12}
+.bigring .prg{fill:none;stroke:url(#rg2);stroke-width:12;stroke-linecap:round;transition:stroke-dashoffset 1.4s var(--ease)}
+.bigring b{font:600 48px/1 var(--serif);display:block}
+.bigring span{display:block;max-width:112px;margin:4px auto 0;line-height:1.25;font-size:12px;color:var(--muted);font-weight:600}
+.after{list-style:none;padding:0;margin:0}
+.after li{display:flex;gap:12px;align-items:center;padding:11px 0;border-top:1px solid var(--line);cursor:pointer;user-select:none}
+.after li:first-child{border-top:0}
+.after .cb{width:24px;height:24px;border-radius:8px;border:2px solid var(--line);display:grid;place-items:center;flex:none;transition:all .25s var(--spring);color:transparent}
+.after li.on .cb{background:var(--accent);border-color:var(--accent);color:#fff;transform:scale(1.08)}
+.after li.on span{color:var(--muted);text-decoration:line-through;text-decoration-color:color-mix(in srgb,var(--muted) 50%,transparent)}
+.ppbar{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--glass);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid var(--line);padding:12px 16px calc(12px + env(safe-area-inset-bottom))}
+.ppbar .in{max-width:520px;margin:0 auto;display:grid;grid-template-columns:1.4fr 1fr;gap:10px}
+.foot{text-align:center;color:var(--muted);font-size:12px;margin-top:20px}
+[hidden]{display:none!important}
+/* consent */
+.cq{display:flex;align-items:center;gap:12px;padding:11px 0;border-top:1px solid var(--line)}
+.cq:first-of-type{border-top:0}
+.cq>div:first-child{flex:1;font-size:14px}
+.seg.yn{flex:0 0 118px}
+.consent-text{white-space:pre-wrap;font-size:13.5px;line-height:1.55;background:var(--surface-2);border-radius:14px;padding:12px 14px;max-height:240px;overflow:auto;color:var(--ink-2)}
+.agree{display:flex;gap:10px;align-items:center;margin-top:12px;font-weight:600;font-size:14px;cursor:pointer}
+.agree input{width:22px;height:22px;accent-color:var(--accent)}
+.sigpad{display:block;width:100%;height:170px;background:#fff;border:1.5px dashed var(--line);border-radius:14px;touch-action:none;cursor:crosshair}
+.sigimg{display:block;max-width:300px;width:100%;background:#fff;border-radius:10px;margin:6px 0;border:1px solid var(--line)}
+/* try-on */
+.tryon{position:relative;aspect-ratio:1;border-radius:20px;overflow:hidden;background:var(--surface-2);touch-action:none}
+.tryon img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.tryov{position:absolute;cursor:grab;touch-action:none}
+.tryov svg{display:block;width:100%;height:auto;overflow:visible}
+.tryempty{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;cursor:pointer;text-align:center;color:var(--ink-2)}
+.tryempty input{position:absolute;inset:0;opacity:0;cursor:pointer}
+@media print{
+  body{background:#fff!important;padding:0!important;color:#000}
+  .top,.tabbar,.wiz-foot,.noprint,.toast{display:none!important}
+  .card{box-shadow:none!important;border:0!important}
+  .view,.rise{animation:none!important}
+  .consent-text{max-height:none;background:none;padding:0}
+}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <a class="brand" href="#/"><svg viewBox="0 0 512 512" aria-hidden="true"><defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:var(--accent)"/><stop offset="1" style="stop-color:color-mix(in srgb,var(--accent) 55%,#1c0a10)"/></linearGradient></defs><rect width="512" height="512" rx="128" fill="url(#lg)"/><path d="M96 330 Q256 150 416 330" fill="none" stroke="#fff" stroke-width="26" stroke-linecap="round"/><g stroke="#fff" stroke-width="18" stroke-linecap="round"><path d="M140 286 L112 238"/><path d="M186 254 L170 196"/><path d="M234 238 L230 172"/><path d="M282 238 L292 170"/><path d="M328 252 L352 188"/><path d="M370 282 L410 226"/></g></svg>Fillcard</a>
+  <span class="spacer"></span>
+  <button class="iconbtn press" id="themeBtn" aria-label="Toggle dark mode"><svg class="ic" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg></button>
+</div></header>
+
+<main id="app" class="wrap"></main>
+
+<nav class="tabbar" aria-label="Main">
+  <a class="tab" href="#/" data-tab="home"><svg class="ic" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Today</a>
+  <a class="tab" href="#/clients" data-tab="clients"><svg class="ic" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18.5 14.8c1.6.8 2.6 2.5 3 5.2"/></svg>Clients</a>
+  <a class="tab fab" href="#/visit/new" data-tab="visit" aria-label="New visit"><span class="dot"><svg class="ic" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span><span class="lbl">New visit</span></a>
+  <a class="tab" href="#/settings" data-tab="settings"><svg class="ic" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/></svg>Studio</a>
+</nav>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<dialog id="dlg" aria-labelledby="dlgTitle"><div class="grab"></div><div class="dhead"><h2 id="dlgTitle"></h2><button class="iconbtn press" data-act="closeDlg" aria-label="Close"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div><div class="dbody" id="dlgBody"></div></dialog>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<script>
+'use strict';
+/* ---------- helpers ---------- */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const uid = () => Math.random().toString(36).slice(2, 9) + Date.now().toString(36).slice(-4);
+const clone = o => JSON.parse(JSON.stringify(o));
+const pad = n => String(n).padStart(2, '0');
+const isoOf = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const todayISO = () => isoOf(new Date());
+const parseISO = s => { const [y, m, d] = String(s).split('-').map(Number); return new Date(y, (m || 1) - 1, d || 1); };
+const addDays = (iso, n) => { const d = parseISO(iso); d.setDate(d.getDate() + Number(n)); return isoOf(d); };
+const daysBetween = (a, b) => Math.round((parseISO(b) - parseISO(a)) / 864e5);
+const fmtDate = (iso, opts = { month: 'short', day: 'numeric' }) => iso ? parseISO(iso).toLocaleDateString('en-US', opts) : '';
+const fmtLong = iso => fmtDate(iso, { weekday: 'short', month: 'short', day: 'numeric' });
+const fmtNum = n => Number(n).toLocaleString('en-US');
+const money = n => (n === '' || n == null || isNaN(n)) ? '' : '$' + fmtNum(Math.round(n));
+const firstName = n => String(n || '').trim().split(/\s+/)[0] || 'Gorgeous';
+const initials = n => String(n || '?').trim().split(/\s+/).slice(0, 2).map(w => w[0]).join('').toUpperCase();
+const isApple = /iPhone|iPad|iPod|Macintosh/.test(navigator.userAgent);
+const smsHref = (phone, body) => `sms:${(phone || '').replace(/[^\d+]/g, '')}${isApple ? '&' : '?'}body=${encodeURIComponent(body)}`;
+const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const haptic = (ms = 8) => { try { if (navigator.vibrate && navigator.userActivation?.hasBeenActive !== false) navigator.vibrate(ms); } catch {} };
+const plural = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`;
+
+const ICONS = {
+  msg: '<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/>',
+  phone: '<path d="M5 4h3l2 5-2.5 1.5a11 11 0 0 0 6 6L15 14l5 2v3a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/>',
+  ig: '<rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".8" fill="currentColor"/>',
+  bell: '<path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/>',
+  check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+  chevR: '<path d="M9 6l6 6-6 6"/>', chevL: '<path d="M15 6l-6 6 6 6"/>', x: '<path d="M6 6l12 12M18 6L6 18"/>',
+  share: '<path d="M12 3v12M7 8l5-5 5 5"/><path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/>',
+  link: '<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>',
+  eye: '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+  cal: '<rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+  sparkle: '<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 16l.7 1.8 1.8.7-1.8.7L19 21l-.7-1.8-1.8-.7 1.8-.7z"/>',
+  trash: '<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>',
+  edit: '<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/>',
+  search: '<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>',
+  camera: '<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>',
+  download: '<path d="M12 3v12M7 10l5 5 5-5M5 21h14"/>',
+  copy: '<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/>',
+  drag: '<path d="M12 4v16M8 8l4-4 4 4M8 16l4 4 4-4"/>',
+  heart: '<path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/>',
+  users: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18.5 14.8c1.6.8 2.6 2.5 3 5.2"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  shield: '<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/>',
+  refresh: '<path d="M20 11a8 8 0 0 0-14.6-4.5L3 9"/><path d="M3 4v5h5M4 13a8 8 0 0 0 14.6 4.5L21 15"/><path d="M21 20v-5h-5"/>',
+  wand: '<path d="M4 20L15 9M14 4l1 2 2 1-2 1-1 2-1-2-2-1 2-1zM19 11l.6 1.4L21 13l-1.4.6L19 15l-.6-1.4L17 13l1.4-.6z"/>'
+};
+const icon = (n, s = 20, sw = 1.8) => `<svg class="ic" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[n] || ''}</svg>`;
+
+function toast(msg, ok = true) {
+  const t = $('#toast'); t.innerHTML = `${ok ? `<span class="tk">${icon('check', 14, 2.6)}</span>` : ''}<span>${esc(msg)}</span>`;
+  t.classList.add('show'); clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('show'), 2300);
+}
+async function copyText(s, msg = 'Copied') { try { await navigator.clipboard.writeText(s); toast(msg); haptic(); } catch { prompt('Copy this:', s); } }
+function burst(el) {
+  if (reduced || !el) return;
+  const r = el.getBoundingClientRect(), x = r.left + r.width / 2, y = r.top + r.height / 2;
+  for (let i = 0; i < 18; i++) {
+    const s = document.createElement('i'); s.className = 'spark';
+    s.style.left = x + 'px'; s.style.top = y + 'px'; s.style.background = i % 3 ? 'var(--accent)' : 'var(--gold)';
+    document.body.appendChild(s);
+    const a = Math.PI * 2 * i / 18 + Math.random() * .3, d = 70 + Math.random() * 80;
+    s.animate([{ transform: `translate(-50%,-50%) rotate(${a}rad) translateX(6px) scaleX(.3)`, opacity: 1 }, { transform: `translate(-50%,-50%) rotate(${a}rad) translateX(${d}px) scaleX(1)`, opacity: 0 }],
+      { duration: 650 + Math.random() * 300, easing: 'cubic-bezier(.2,.8,.2,1)' }).onfinish = () => s.remove();
+  }
+}
+
+/* ---------- lash domain ---------- */
+const CURLS = ['J', 'B', 'C', 'CC', 'D', 'DD', 'L', 'M'];
+const CURL_COLOR = { J: '#7C93A6', B: '#5E8F72', C: '#C25774', CC: '#D07A4E', D: '#8A66B5', DD: '#4F74B8', L: '#A8913E', M: '#3E9191' };
+const CURL_BEND = { J: .05, B: .1, C: .18, CC: .22, D: .27, DD: .31, L: .2, M: .24 };
+const CURL_HINT = { J: 'Straightest', B: 'Subtle lift', C: 'Natural curl', CC: 'Lifted', D: 'Dramatic', DD: 'Extra dramatic', L: 'Hooded eyes', M: 'Hooded, softer' };
+const DIAMETERS = ['0.03', '0.05', '0.07', '0.10', '0.12', '0.15', '0.20'];
+const SET_TYPES = ['Classic', 'Hybrid', 'Volume', 'Mega volume', 'Wet set', 'Wispy'];
+const SERVICES = ['Full set', 'Fill', 'Removal', 'Lash lift'];
+const PRESETS = {
+  'Natural':  [8, 9, 10, 11, 11, 11, 10],
+  'Cat eye':  [8, 9, 10, 11, 12, 13, 14],
+  'Doll eye': [9, 10, 11, 12, 11, 10, 9],
+  'Squirrel': [8, 9, 10, 11, 12, 13, 11],
+  'Open eye': [9, 10, 11, 12, 12, 11, 10],
+  'Kitten':   [8, 9, 9, 10, 10, 11, 11]
+};
+function presetLengths(name, n) {
+  const p = PRESETS[name] || PRESETS.Natural;
+  return Array.from({ length: n }, (_, i) => {
+    const x = n === 1 ? 0 : i / (n - 1) * (p.length - 1), lo = Math.floor(x), hi = Math.min(p.length - 1, lo + 1);
+    return Math.round(p[lo] + (p[hi] - p[lo]) * (x - lo));
+  });
+}
+const makeZones = (style, n, curl) => presetLengths(style, n).map(len => ({ len, curl }));
+const clampLen = l => Math.max(5, Math.min(18, l));
+function resizeZones(zones, n) {
+  if (n === zones.length) return zones;
+  return Array.from({ length: n }, (_, i) => clone(zones[Math.round(i / Math.max(1, n - 1) * (zones.length - 1))]));
+}
+function mapSummary(v) {
+  const lens = v.zones.map(z => z.len), curls = [...new Set(v.zones.map(z => z.curl))];
+  return { range: `${Math.min(...lens)}–${Math.max(...lens)} mm`, curls: curls.join('/'), lengths: lens.join(' · ') };
+}
+function curlIcon(c, color = 'currentColor') {
+  const k = (CURL_BEND[c] ?? .18) / .31;
+  return `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 21 Q7 ${8 + k * 2} ${9 + k * 10} ${4 + k * 4}" fill="none" stroke="${color}" stroke-width="2.2" stroke-linecap="round"/><path d="M4 21h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" opacity=".35"/></svg>`;
+}
+
+/* Shared geometry so the SVG editor and the canvas card draw identical maps. */
+const MAP_W = 360, MAP_H = 220, MAP_SCALE = 4.4;
+function mapGeometry(zones, per = 6) {
+  const P0 = { x: 40, y: 168 }, P1 = { x: MAP_W / 2, y: 66 }, P2 = { x: MAP_W - 40, y: 168 };
+  const t0 = .05, t1 = .97, N = zones.length;
+  const pt = t => ({ x: (1 - t) ** 2 * P0.x + 2 * (1 - t) * t * P1.x + t * t * P2.x, y: (1 - t) ** 2 * P0.y + 2 * (1 - t) * t * P1.y + t * t * P2.y });
+  const tan = t => { const x = 2 * (1 - t) * (P1.x - P0.x) + 2 * t * (P2.x - P1.x), y = 2 * (1 - t) * (P1.y - P0.y) + 2 * t * (P2.y - P1.y), l = Math.hypot(x, y); return { x: x / l, y: y / l }; };
+  // Lashes grow between the lid normal and straight up, so long outer zones stay inside the frame.
+  const dir = t => { const d = tan(t), x = d.y, y = -d.x - .8, l = Math.hypot(x, y); return { x: x / l, y: y / l }; };
+  const lashes = [], labels = [], hits = [];
+  zones.forEach((z, i) => {
+    const a = t0 + (t1 - t0) * i / N, b = t0 + (t1 - t0) * (i + 1) / N;
+    for (let k = 0; k < per; k++) {
+      const t = a + (b - a) * (k + .5) / per, s = pt(t), n = dir(t);
+      const L = z.len * MAP_SCALE * (.9 + .1 * Math.abs(Math.sin(k * 2.1 + i)));
+      const lean = (t - .45) * .3, bend = CURL_BEND[z.curl] ?? .18;
+      const e = { x: s.x + n.x * L + L * lean, y: s.y + n.y * L };
+      const c = { x: s.x + n.x * L * .62 + L * (lean * .3 - bend * .25), y: s.y + n.y * L * .62 };
+      lashes.push({ s, c, e, zone: i, curl: z.curl });
+    }
+    const tm = (a + b) / 2, s = pt(tm), n = dir(tm), L = z.len * MAP_SCALE, lean = (tm - .45) * .3;
+    labels.push({ x: s.x + n.x * (L + 14) + L * lean, y: s.y + n.y * (L + 14), zone: i, len: z.len });
+    const sa = pt(a), sb = pt(b), na = dir(a), nb = dir(b), R = 112;
+    hits.push(`M${sa.x},${sa.y} L${sb.x},${sb.y} L${sb.x + nb.x * R},${sb.y + nb.y * R} L${sa.x + na.x * R},${sa.y + na.y * R}Z`);
+  });
+  return { P0, P1, P2, lashes, labels, hits };
+}
+function mapSVG(zones, { sel = -1, interactive = false, captions = true, labels = true, grow = false } = {}) {
+  const g = mapGeometry(zones);
+  const lash = g.lashes.map((l, i) => `<path class="lash" ${grow ? `pathLength="1" style="--d:${i}"` : ''} d="M${l.s.x.toFixed(1)},${l.s.y.toFixed(1)} Q${l.c.x.toFixed(1)},${l.c.y.toFixed(1)} ${l.e.x.toFixed(1)},${l.e.y.toFixed(1)}" stroke="${CURL_COLOR[l.curl] || '#999'}" stroke-width="${sel === l.zone ? 2.6 : 1.9}" opacity="${sel < 0 || sel === l.zone ? 1 : .5}"/>`).join('');
+  const hits = interactive ? g.hits.map((d, i) => `<path class="zonehit" d="${d}" data-zone="${i}"/>`).join('') : '';
+  const lbls = labels ? g.labels.map(l => `<g class="lbl${sel === l.zone ? ' sel' : ''}" ${grow ? `style="--d:${l.zone}"` : ''} ${interactive ? `data-zone="${l.zone}"` : ''}>${sel === l.zone && interactive ? `<circle class="halo" cx="${l.x.toFixed(1)}" cy="${l.y.toFixed(1)}" r="16"/>` : ''}<circle class="c" cx="${l.x.toFixed(1)}" cy="${l.y.toFixed(1)}" r="11.5"/><text x="${l.x.toFixed(1)}" y="${l.y.toFixed(1)}">${Math.round(l.len)}</text></g>`).join('') : '';
+  const caps = captions ? `<text class="cap" x="${g.P0.x - 6}" y="${g.P0.y + 24}">Inner</text><text class="cap" x="${g.P2.x + 6}" y="${g.P2.y + 24}" text-anchor="end">Outer</text>` : '';
+  return `<svg class="map${grow ? ' grow' : ''}" viewBox="0 0 ${MAP_W} ${MAP_H}" role="img" aria-label="Lash map: ${zones.map(z => Math.round(z.len) + 'mm ' + z.curl).join(', ')}">
+    <path class="lower" d="M${g.P0.x},${g.P0.y} Q${MAP_W / 2},${MAP_H - 2} ${g.P2.x},${g.P2.y}"/>
+    ${lash}<path class="lid" d="M${g.P0.x},${g.P0.y} Q${g.P1.x},${g.P1.y} ${g.P2.x},${g.P2.y}"/>${hits}${lbls}${caps}</svg>`;
+}
+const legendHTML = zones => `<div class="legend">${[...new Set(zones.map(z => z.curl))].map(c => `<span><i style="background:${CURL_COLOR[c]}"></i>${c} curl</span>`).join('')}</div>`;
+
+/* ---------- storage ---------- */
+const KEY = 'fillcard.v1';
+const DEFAULT_AFTERCARE = [
+  'Keep lashes dry for the first 24 hours',
+  'Wash lashes 3–4× a week with a lash-safe cleanser',
+  'Brush them gently every morning with a clean spoolie',
+  'Skip oil-based removers and mascara on extensions',
+  'No lash curlers, and try not to sleep face-down',
+  'Don’t pick or pull — let them shed naturally',
+  'Book your refill every 2–3 weeks to keep them full'
+];
+const DEFAULT_CONSENT = `I am requesting eyelash extension services and understand that:
+
+• Extensions are applied to my natural lashes one by one using a professional adhesive. Even with care, irritation, redness, swelling, or an allergic reaction to the adhesive or other products is possible.
+• I have answered the health questions honestly and will tell my artist right away about any discomfort during or after the service.
+• How long my lashes last depends on my natural lash cycle and on following the aftercare instructions I was given.
+• If I have a reaction, I will seek medical care and let my artist know. I can ask for removal at any time.
+• I agree to before/after photos being taken for my client record.`;
+const CONSENT_QS = [
+  ['lenses', 'Do you wear contact lenses?'],
+  ['eyeCond', 'Any eye conditions, infections, or eye surgery in the last 6 months?'],
+  ['allergy', 'Any known allergies (adhesives, cyanoacrylate, latex, tape)?'],
+  ['skin', 'Sensitive skin, or a reaction to a previous lash service?'],
+  ['meds', 'On chemotherapy, Accutane, or medication that affects hair growth?']
+];
+// General industry guidance used as a starting point, not a rule.
+const EYE_SHAPES = {
+  'Almond':     { styles: ['Cat eye', 'Natural'],  curls: ['CC', 'C'], tip: 'Balanced shape: almost any style works. Cat eye adds lift; Natural keeps it soft.' },
+  'Round':      { styles: ['Cat eye', 'Squirrel'], curls: ['C', 'CC'], tip: 'Build length toward the outer corner to elongate and lift the eye.' },
+  'Hooded':     { styles: ['Open eye', 'Doll eye'], curls: ['L', 'D'], tip: 'L/M or D curls lift lashes clear of the lid fold. Keep the outer corner from getting too long.' },
+  'Monolid':    { styles: ['Open eye', 'Doll eye'], curls: ['L', 'M'], tip: 'Lifted L/M curls show more lash. Peak the length in the center to open the eye.' },
+  'Downturned': { styles: ['Squirrel', 'Open eye'], curls: ['CC', 'D'], tip: 'Peak length just before the outer corner. Long outer lashes pull the eye further down.' },
+  'Upturned':   { styles: ['Doll eye', 'Open eye'], curls: ['C', 'CC'], tip: 'Center-focused length balances the natural lift.' },
+  'Close-set':  { styles: ['Cat eye', 'Kitten'], curls: ['C', 'CC'], tip: 'Keep the inner corner short and build outward to visually widen the eyes.' },
+  'Wide-set':   { styles: ['Doll eye', 'Open eye'], curls: ['C', 'CC'], tip: 'Bring length toward the center and inner third to draw the eyes together.' },
+  'Deep-set':   { styles: ['Open eye', 'Doll eye'], curls: ['D', 'CC'], tip: 'Stronger curls bring lashes forward out of the socket. Avoid very heavy diameters.' }
+};
+const SWATCHES = ['#B4536A', '#9C4F7A', '#C07A62', '#A5876B', '#5E7D6A', '#4A5A82', '#2B2426', '#C49A3C'];
+const DEFAULT_SETTINGS = {
+  artist: '', studio: '', booking: '', instagram: '', phone: '', color: '#B4536A', refillDays: 14,
+  aftercare: DEFAULT_AFTERCARE.join('\n'),
+  reminder: 'Hi {name}! It’s {artist} 💕 Your lash refill is due around {due}. Want me to save you a spot? {booking}',
+  passportMsg: 'Hi {name}! Here’s your lash passport from today — your map, aftercare and refill date: {link}',
+  theme: 'auto', onboarded: false, hintSeen: false,
+  bookingMode: 'link', depositLink: '', consentText: DEFAULT_CONSENT, lastBackup: ''
+};
+function seed() {
+  const t = todayISO(), mk = (name, extra) => ({ id: uid(), name, phone: '', instagram: '', allergies: '', patchTest: '', notes: '', createdAt: t, demo: true, ...extra });
+  const ava = mk('Ava Thompson', { phone: '(512) 555-0142', instagram: 'ava.t', notes: 'Prefers wispy. Sleeps on right side — right eye sheds faster.' });
+  const mia = mk('Mia Rodriguez', { phone: '(512) 555-0199', allergies: 'Mild sensitivity to fast-dry glue — use sensitive adhesive', patchTest: addDays(t, -60) });
+  const zoe = mk('Zoe Carter', { instagram: 'zoecarterr' });
+  const nia = mk('Nia Brooks', { phone: '(512) 555-0117', notes: 'Hooded eyes — L curl works best.' });
+  const v = (c, daysAgo, service, style, setType, curl, price, retention, refillDays = 14) => {
+    const date = addDays(t, -daysAgo);
+    return { id: uid(), clientId: c.id, date, service, style, setType, curl, diameter: setType === 'Classic' ? '0.15' : '0.07', zones: makeZones(style, 7, curl), adhesive: 'Sensitive Pro', temp: '72', humidity: '50', retention, price, notes: '', photos: [], refillDays, nextDue: addDays(date, refillDays), demo: true };
+  };
+  return {
+    settings: { ...DEFAULT_SETTINGS, artist: 'Jess', studio: 'Jess Lash Studio', booking: 'https://example.com/book', instagram: 'jesslashstudio' },
+    clients: [ava, mia, zoe, nia],
+    visits: [
+      v(ava, 46, 'Full set', 'Cat eye', 'Hybrid', 'CC', 220, null), v(ava, 30, 'Fill', 'Cat eye', 'Hybrid', 'CC', 75, 60), v(ava, 16, 'Fill', 'Cat eye', 'Hybrid', 'CC', 75, 55),
+      v(mia, 25, 'Full set', 'Open eye', 'Volume', 'D', 260, null), v(mia, 11, 'Fill', 'Open eye', 'Volume', 'D', 85, 80),
+      v(zoe, 52, 'Full set', 'Natural', 'Classic', 'C', 180, null, 21),
+      v(nia, 20, 'Full set', 'Doll eye', 'Wispy', 'L', 240, null), v(nia, 4, 'Fill', 'Doll eye', 'Wispy', 'L', 80, 85)
+    ]
+  };
+}
+function load() { try { const d = JSON.parse(localStorage.getItem(KEY)); if (d && d.clients) { d.settings = { ...DEFAULT_SETTINGS, ...d.settings }; return d; } } catch {} return seed(); }
+let db = load();
+function save() { try { localStorage.setItem(KEY, JSON.stringify(db)); } catch { toast('Storage is full — export a backup in Studio', false); } }
+const S = () => db.settings;
+const getClient = id => db.clients.find(c => c.id === id);
+const getVisit = id => db.visits.find(v => v.id === id);
+const visitsOf = cid => db.visits.filter(v => v.clientId === cid).sort((a, b) => b.date.localeCompare(a.date));
+
+/* Photos live in IndexedDB as compressed JPEG blobs; localStorage would fill up fast. */
+const idb = (() => {
+  let p;
+  const open = () => p || (p = new Promise((res, rej) => { const r = indexedDB.open('fillcard', 1); r.onupgradeneeded = () => r.result.createObjectStore('photos'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }));
+  const run = (mode, fn) => open().then(d => new Promise((res, rej) => { const tx = d.transaction('photos', mode), rq = fn(tx.objectStore('photos')); tx.oncomplete = () => res(rq && rq.result); tx.onerror = () => rej(tx.error); }));
+  return { get: k => run('readonly', s => s.get(k)), put: (k, v) => run('readwrite', s => s.put(v, k)), del: k => run('readwrite', s => s.delete(k)), keys: () => run('readonly', s => s.getAllKeys()), clear: () => run('readwrite', s => s.clear()) };
+})();
+const urlCache = new Map();
+async function photoURL(id) {
+  if (urlCache.has(id)) return urlCache.get(id);
+  try { const b = await idb.get(id); if (!b) return ''; const u = URL.createObjectURL(b); urlCache.set(id, u); return u; } catch { return ''; }
+}
+function compress(file, max = 1280) {
+  return new Promise((res, rej) => {
+    const img = new Image(), u = URL.createObjectURL(file);
+    img.onload = () => {
+      const k = Math.min(1, max / Math.max(img.width, img.height)), c = document.createElement('canvas');
+      c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(u);
+      c.toBlob(b => b ? res(b) : rej(new Error('encode')), 'image/jpeg', .82);
+    };
+    img.onerror = () => { URL.revokeObjectURL(u); rej(new Error('read')); };
+    img.src = u;
+  });
+}
+async function hydratePhotos(root = document) {
+  for (const el of $$('img[data-photo]', root)) { const u = await photoURL(el.dataset.photo); if (u) el.src = u; else el.remove(); }
+}
+
+/* ---------- status logic ---------- */
+function clientStatus(c) {
+  const vs = visitsOf(c.id), last = vs[0], t = todayISO();
+  if (!last) return { kind: 'new', label: 'New client', cls: 'accent' };
+  const since = daysBetween(last.date, t), until = daysBetween(t, last.nextDue), ap = last.nextAppt;
+  if (ap?.date && ap.date >= t) return { kind: 'booked', label: `Booked ${ap.date === t ? 'today' : fmtDate(ap.date)}${ap.time ? ' · ' + fmtTime(ap.time) : ''}`, cls: 'ok', last, since, until: daysBetween(t, ap.date), appt: ap };
+  if (since > 45) return { kind: 'lapsed', label: `${since} days away`, cls: 'bad', last, since, until };
+  if (until < 0) return { kind: 'overdue', label: `${-until}d overdue`, cls: 'bad', last, since, until };
+  if (until <= 7) return { kind: 'soon', label: until === 0 ? 'Due today' : `Due in ${until}d`, cls: 'warn', last, since, until };
+  return { kind: 'ok', label: `Due ${fmtDate(last.nextDue)}`, cls: 'ok', last, since, until };
+}
+function cycleOf(c) {
+  const st = clientStatus(c); if (!st.last) return { p: 0, col: 'var(--line)', st };
+  const total = Math.max(1, daysBetween(st.last.date, st.last.nextDue)), p = Math.min(1, Math.max(.04, st.since / total));
+  const col = st.cls === 'bad' ? 'var(--bad)' : st.cls === 'warn' ? 'var(--warn)' : 'var(--ok)';
+  return { p, col, st };
+}
+function avatar(c, size = 46) {
+  const { p, col } = cycleOf(c), r = (size - 4) / 2, C = 2 * Math.PI * r, h = size / 2;
+  return `<span class="ava" style="width:${size}px;height:${size}px" title="Refill cycle ${Math.round(p * 100)}%"><svg viewBox="0 0 ${size} ${size}"><circle cx="${h}" cy="${h}" r="${r}" class="trk"/><circle cx="${h}" cy="${h}" r="${r}" class="prg" stroke="${col}" stroke-dasharray="${C.toFixed(1)}" stroke-dashoffset="${C.toFixed(1)}" data-off="${(C * (1 - p)).toFixed(1)}" transform="rotate(-90 ${h} ${h})"/></svg><b style="font-size:${Math.round(size * .3)}px">${esc(initials(c.name))}</b></span>`;
+}
+function fill(tpl, c, extra = {}) {
+  const st = clientStatus(c), s = S(), bt = bookingTarget(s);
+  const booking = !bt ? '' : bt.mode === 'link' ? `Book here: ${bt.href}` : bt.mode === 'text' ? 'Just reply here to book.' : `DM me to book: ${bt.href}`;
+  const map = { name: firstName(c.name), artist: s.artist || s.studio || 'your lash artist', studio: s.studio, booking, due: st.last ? fmtLong(st.last.nextDue) : 'soon', ...extra };
+  return tpl.replace(/\{(\w+)\}/g, (_, k) => map[k] ?? '').replace(/\s+$/, '');
+}
+const remindedToday = c => c.lastReminded === todayISO();
+const fmtTime = t => { if (!t) return ''; const [h, m] = t.split(':').map(Number); return `${(h % 12) || 12}${m ? ':' + pad(m) : ''} ${h < 12 ? 'AM' : 'PM'}`; };
+/* Where "book" sends a client: her booking app, a text to her, or her Instagram DMs. */
+function bookingTarget(s = S()) {
+  const digits = (s.phone || '').replace(/[^\d+]/g, ''), ig = (s.instagram || '').replace(/^@/, '');
+  if (s.bookingMode === 'text' && digits) return { mode: 'text', href: smsHref(digits, 'Hi! I’d like to book my lash refill 💕'), qr: `sms:${digits}`, scan: 'Scan to text me & book', sub: s.phone };
+  if (s.bookingMode === 'dm' && ig) return { mode: 'dm', href: `https://ig.me/m/${ig}`, qr: `https://ig.me/m/${ig}`, scan: 'Scan to DM me & book', sub: '@' + ig };
+  if (s.booking && s.bookingMode !== 'text' && s.bookingMode !== 'dm') return { mode: 'link', href: s.booking, qr: s.booking, scan: 'Scan to book your refill', sub: s.booking.replace(/^https?:\/\//, '') };
+  return null;
+}
+
+/* ---------- passport link (all data lives in the URL fragment, nothing is uploaded) ---------- */
+const b64u = s => btoa(unescape(encodeURIComponent(s))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+const unb64u = s => decodeURIComponent(escape(atob(s.replace(/-/g, '+').replace(/_/g, '/'))));
+function passportData(v) {
+  const c = getClient(v.clientId), s = S(), bt = bookingTarget(s);
+  // For "text me" the client's own phone builds the sms: link, so send the number, not an href.
+  return { v: 1, n: firstName(c?.name), a: s.artist, s: s.studio, bm: bt?.mode || '', b: bt ? (bt.mode === 'text' ? (s.phone || '').replace(/[^\d+]/g, '') : bt.href) : '', dep: s.depositLink || '', ap: v.nextAppt?.date ? v.nextAppt : null, ig: s.instagram, col: s.color, d: v.date, due: v.nextDue, st: v.setType, sty: v.style, dia: v.diameter, z: v.zones.map(z => z.len + z.curl).join(','), ac: s.aftercare.split('\n').map(x => x.trim()).filter(Boolean).slice(0, 8) };
+}
+const passportLink = v => `${location.href.split('#')[0]}#p=${b64u(JSON.stringify(passportData(v)))}`;
+function decodeZones(str) { return String(str || '').split(',').filter(Boolean).map(t => { const m = t.match(/^(\d+(?:\.\d+)?)([A-Z]+)$/); return m ? { len: +m[1], curl: m[2] } : null; }).filter(Boolean); }
+function icsFor(p) {
+  const who = p.s || p.a || 'my lash artist', ap = p.ap && p.ap.date >= todayISO() ? p.ap : null, day = (ap ? ap.date : p.due) || todayISO(), d = day.replace(/-/g, '');
+  const when = ap && ap.time ? [`DTSTART:${d}T${ap.time.replace(':', '')}00`, 'DURATION:PT1H30M'] : [`DTSTART;VALUE=DATE:${d}`, `DTEND;VALUE=DATE:${addDays(day, 1).replace(/-/g, '')}`];
+  const link = p.b && p.bm !== 'text' ? p.b : '';
+  return ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Fillcard//EN', 'BEGIN:VEVENT', `UID:${uid()}@fillcard`, `DTSTAMP:${new Date().toISOString().replace(/[-:]/g, '').slice(0, 15)}Z`,
+    ...when, `SUMMARY:${ap ? 'Lash appointment' : 'Lash refill due'} — ${who}`, `DESCRIPTION:${ap ? 'Your lash appointment.' : 'Time for your lash refill.'}${link ? ' Book: ' + link : ''}`, ...(link ? [`URL:${link}`] : []),
+    'BEGIN:VALARM', `TRIGGER:${ap ? '-P1D' : '-P2D'}`, 'ACTION:DISPLAY', `DESCRIPTION:${ap ? 'Lash appointment tomorrow' : 'Lash refill in 2 days — book your spot'}`, 'END:VALARM', 'END:VEVENT', 'END:VCALENDAR'].join('\r\n');
+}
+function downloadBlob(blob, name) { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500); }
+
+/* ---------- card image ---------- */
+function qrCanvas(text, size) {
+  if (!window.qrcode || !text) return null;
+  try {
+    const q = qrcode(0, 'M'); q.addData(text); q.make();
+    const n = q.getModuleCount(), cell = Math.floor(size / (n + 2)), c = document.createElement('canvas'), x = c.getContext('2d');
+    c.width = c.height = cell * (n + 2); x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height); x.fillStyle = '#231B1D';
+    for (let r = 0; r < n; r++) for (let k = 0; k < n; k++) if (q.isDark(r, k)) x.fillRect((k + 1) * cell, (r + 1) * cell, cell, cell);
+    return c;
+  } catch { return null; }
+}
+function wrapText(ctx, text, x, y, maxW, lh) {
+  const words = text.split(' '); let line = '', yy = y;
+  for (const w of words) { const t = line ? line + ' ' + w : w; if (ctx.measureText(t).width > maxW && line) { ctx.fillText(line, x, yy); line = w; yy += lh; } else line = t; }
+  if (line) ctx.fillText(line, x, yy); return yy + lh;
+}
+function roundRect(ctx, x, y, w, h, r) { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
+function shade(hex, amt) {
+  const n = parseInt(String(hex).replace('#', '').padEnd(6, '0'), 16), f = amt < 0 ? 0 : 255, p = Math.abs(amt);
+  const ch = v => Math.round((f - v) * p + v);
+  return `rgb(${ch(n >> 16)},${ch(n >> 8 & 255)},${ch(n & 255)})`;
+}
+async function drawCard(v) {
+  try { await document.fonts.ready; } catch {}
+  const c = getClient(v.clientId), s = S(), W = 1080, H = 1350, cv = document.createElement('canvas'), x = cv.getContext('2d');
+  cv.width = W; cv.height = H;
+  const accent = s.color || '#B4536A', ink = '#231B1D', muted = '#857779', serif = '"Fraunces", Georgia, serif', sans = '"Inter", system-ui, sans-serif';
+  const bg = x.createLinearGradient(0, 0, 0, H); bg.addColorStop(0, '#FBF7F3'); bg.addColorStop(1, '#F4ECE6'); x.fillStyle = bg; x.fillRect(0, 0, W, H);
+  // header
+  const grd = x.createLinearGradient(40, 40, W - 40, 380); grd.addColorStop(0, shade(accent, .12)); grd.addColorStop(1, shade(accent, -.42));
+  x.save(); roundRect(x, 40, 40, W - 80, 340, 48); x.clip(); x.fillStyle = grd; x.fillRect(40, 40, W - 80, 340);
+  x.globalAlpha = .16; x.strokeStyle = '#fff'; x.lineCap = 'round';
+  x.lineWidth = 7; x.beginPath(); x.moveTo(760, 420); x.quadraticCurveTo(900, 250, 1060, 420); x.stroke();
+  x.lineWidth = 5; for (let i = 0; i < 9; i++) { const t = (i + .5) / 9, px = (1 - t) ** 2 * 760 + 2 * (1 - t) * t * 900 + t * t * 1060, py = (1 - t) ** 2 * 420 + 2 * (1 - t) * t * 250 + t * t * 420; x.beginPath(); x.moveTo(px, py); x.lineTo(px + (t - .45) * 70, py - 90 - Math.sin(t * Math.PI) * 30); x.stroke(); }
+  x.restore();
+  x.fillStyle = 'rgba(255,255,255,.82)'; x.font = `700 26px ${sans}`; x.fillText((s.studio || s.artist || 'LASH STUDIO').toUpperCase(), 96, 116);
+  x.fillStyle = '#fff'; x.font = `600 86px ${serif}`; x.fillText(`${firstName(c?.name)}’s lashes`, 92, 226);
+  x.font = `500 31px ${sans}`; x.fillStyle = 'rgba(255,255,255,.9)';
+  x.fillText(`${v.setType} · ${v.style} · ${fmtDate(v.date, { month: 'long', day: 'numeric', year: 'numeric' })}`, 96, 296);
+  // map panel
+  x.save(); x.shadowColor = 'rgba(90,40,52,.12)'; x.shadowBlur = 40; x.shadowOffsetY = 12; x.fillStyle = '#fff'; roundRect(x, 40, 410, W - 80, 490, 44); x.fill(); x.restore();
+  const g = mapGeometry(v.zones), k = 1.95, ox = (W - MAP_W * k) / 2, oy = 404;
+  x.save(); x.translate(ox, oy); x.scale(k, k);
+  x.strokeStyle = '#EDE4DE'; x.lineWidth = 2; x.setLineDash([4, 5]); x.beginPath(); x.moveTo(g.P0.x, g.P0.y); x.quadraticCurveTo(MAP_W / 2, MAP_H - 2, g.P2.x, g.P2.y); x.stroke(); x.setLineDash([]);
+  x.lineCap = 'round';
+  for (const l of g.lashes) { x.strokeStyle = CURL_COLOR[l.curl] || '#999'; x.lineWidth = 1.9; x.beginPath(); x.moveTo(l.s.x, l.s.y); x.quadraticCurveTo(l.c.x, l.c.y, l.e.x, l.e.y); x.stroke(); }
+  x.strokeStyle = ink; x.lineWidth = 2.4; x.beginPath(); x.moveTo(g.P0.x, g.P0.y); x.quadraticCurveTo(g.P1.x, g.P1.y, g.P2.x, g.P2.y); x.stroke();
+  for (const l of g.labels) { x.fillStyle = '#fff'; x.strokeStyle = '#E2D7D0'; x.lineWidth = 1.5; x.beginPath(); x.arc(l.x, l.y, 11.5, 0, Math.PI * 2); x.fill(); x.stroke(); x.fillStyle = ink; x.font = `700 11px ${sans}`; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(String(l.len), l.x, l.y); }
+  x.restore(); x.textAlign = 'left'; x.textBaseline = 'alphabetic';
+  const sm = mapSummary(v);
+  x.fillStyle = muted; x.font = `600 27px ${sans}`; x.textAlign = 'center';
+  x.fillText(`${sm.curls} curl  ·  ${v.diameter} mm  ·  ${sm.range}`, W / 2, 866); x.textAlign = 'left';
+  // refill box
+  x.fillStyle = '#fff'; roundRect(x, 40, 930, 480, 225, 40); x.fill();
+  const ap = v.nextAppt?.date ? v.nextAppt : null, day = ap ? ap.date : v.nextDue;
+  x.fillStyle = accent; roundRect(x, 80, 968, 92, 104, 18); x.fill();
+  x.fillStyle = '#fff'; x.font = `700 20px ${sans}`; x.textAlign = 'center'; x.fillText(fmtDate(day, { month: 'short' }).toUpperCase(), 126, 996);
+  x.font = `600 50px ${serif}`; x.fillText(fmtDate(day, { day: 'numeric' }), 126, 1054); x.textAlign = 'left';
+  x.fillStyle = muted; x.font = `700 21px ${sans}`; x.fillText(ap ? 'YOU’RE BOOKED ✓' : 'REFILL DUE', 196, 992);
+  x.fillStyle = ink; x.font = `600 40px ${serif}`; x.fillText(fmtDate(day, { weekday: 'long' }), 196, 1042);
+  x.fillStyle = muted; x.font = `500 24px ${sans}`; x.fillText(ap ? (ap.time ? `at ${fmtTime(ap.time)}` : 'see you then') : `in ${daysBetween(v.date, v.nextDue)} days`, 196, 1078);
+  x.fillStyle = ink; x.font = `500 22px ${sans}`; x.fillText('Add it to your calendar from', 84, 1118); x.fillText('your lash passport link ✓', 84, 1144);
+  // aftercare
+  x.fillStyle = ink; x.font = `700 21px ${sans}`; x.fillText('AFTERCARE', 566, 978);
+  x.font = `400 23px ${sans}`; let yy = 1018;
+  for (const a of s.aftercare.split('\n').map(t => t.trim()).filter(Boolean).slice(0, 4)) {
+    x.fillStyle = accent; x.beginPath(); x.arc(574, yy - 8, 5, 0, Math.PI * 2); x.fill(); x.fillStyle = ink;
+    yy = wrapText(x, a, 592, yy, 430, 31) + 8; if (yy > 1150) break;
+  }
+  // booking QR + footer
+  const bt = bookingTarget(s), q = bt && qrCanvas(bt.qr, 140);
+  if (q) { x.fillStyle = '#fff'; roundRect(x, 40, 1180, 150, 150, 24); x.fill(); x.drawImage(q, 45, 1185, 140, 140); x.fillStyle = ink; x.font = `600 30px ${serif}`; x.fillText(bt.scan, 214, 1244); x.fillStyle = muted; x.font = `400 22px ${sans}`; x.fillText(String(bt.sub).slice(0, 46), 214, 1282); }
+  else { x.fillStyle = ink; x.font = `600 30px ${serif}`; x.fillText('See you at your refill!', 60, 1260); }
+  if (s.instagram) { x.textAlign = 'right'; x.fillStyle = accent; x.font = `700 27px ${sans}`; x.fillText('@' + s.instagram.replace(/^@/, ''), W - 60, 1310); x.textAlign = 'left'; }
+  return cv;
+}
+
+/* ---------- render plumbing ---------- */
+const app = $('#app');
+let draft = null, sel = 0, dirty = false, step = 0, shownZones = null, tweenRaf = 0, drag = null, queue = null;
+function setTab(name) { $$('.tab').forEach(t => t.dataset.tab === name ? t.setAttribute('aria-current', 'page') : t.removeAttribute('aria-current')); }
+function mount(html, { focus = false } = {}) {
+  document.body.classList.toggle('focus', focus);
+  app.innerHTML = `<div class="view">${html}</div>`;
+  liftFixed();
+  afterRender(app);
+}
+// An animated (transformed) ancestor would trap position:fixed bars, so lift them out of the view.
+function liftFixed() { $$('.view .wiz-foot, .view .ppbar', app).forEach(el => app.appendChild(el)); }
+function afterRender(root) {
+  requestAnimationFrame(() => requestAnimationFrame(() => $$('.prg[data-off]', root).forEach(c => c.style.strokeDashoffset = c.dataset.off)));
+  $$('[data-count]', root).forEach(el => {
+    const to = +el.dataset.count, pre = el.dataset.pre || '', suf = el.dataset.suf || '';
+    if (reduced || !to) { el.textContent = pre + fmtNum(to) + suf; return; }
+    const t0 = performance.now(), d = 900, tick = t => { const k = Math.min(1, (t - t0) / d), e = 1 - Math.pow(1 - k, 3); el.textContent = pre + fmtNum(Math.round(to * e)) + suf; if (k < 1) requestAnimationFrame(tick); };
+    requestAnimationFrame(tick);
+  });
+}
+const rise = (html, i) => `<div class="rise" style="--i:${i}">${html}</div>`;
+function emptyArt() { return `<svg viewBox="0 0 120 70" aria-hidden="true"><path d="M10 58 Q60 6 110 58" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>${[...Array(9)].map((_, i) => { const t = (i + .5) / 9, x = 10 + 100 * t, y = 58 - 104 * t * (1 - t); return `<path d="M${x} ${y} l${(t - .5) * 8} -14" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>`; }).join('')}</svg>`; }
+
+/* ---------- Today ---------- */
+function greeting() { const h = new Date().getHours(); return h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening'; }
+function clientRow(c, st, opts = {}) {
+  const done = remindedToday(c);
+  return `<div class="item"><a href="#/client/${c.id}" aria-label="${esc(c.name)}">${avatar(c)}</a>
+    <a class="grow" href="#/client/${c.id}" style="text-decoration:none;color:inherit;min-width:0"><div class="name">${esc(c.name)}</div>
+    <div class="row" style="gap:7px;margin-top:3px"><span class="pill ${st.cls}"><i></i>${esc(st.label)}</span><span class="meta">${st.last ? `${esc(st.last.style)} · ${fmtDate(st.last.date)}` : 'No visits yet'}</span></div></a>
+    ${opts.remind !== false && st.last ? `<button class="qbtn press ${done ? 'done' : ''}" data-act="remind" data-id="${c.id}" aria-label="${done ? 'Reminded today' : 'Send reminder to ' + esc(c.name)}">${icon(done ? 'check' : 'bell', 19)}</button>` : ''}</div>`;
+}
+function viewWelcome() {
+  setTab('');
+  const demo = makeZones('Cat eye', 7, 'CC');
+  mount(`<div class="welcome">
+    <div class="stage rise" style="--i:0">${mapSVG(demo, { grow: true, captions: false })}</div>
+    ${rise(`<h1>Every set, remembered.<br><em>Every refill, rebooked.</em></h1><p class="sub" style="font-size:16px">The lash map, client record and refill card app made for independent lash artists. Free, private, and nothing to install.</p>`, 2)}
+    ${rise(`<div class="feat"><span class="qi">${icon('wand')}</span><div><b>Map a set in seconds</b><span class="muted small">Drag the lengths, tap the curls. Next fill starts from her last map.</span></div></div>
+    <div class="feat"><span class="qi">${icon('heart')}</span><div><b>Send her a lash passport</b><span class="muted small">Her map, aftercare, refill date and your booking link — she adds the reminder to her own calendar.</span></div></div>
+    <div class="feat"><span class="qi">${icon('bell')}</span><div><b>See who’s due, rebook in one tap</b><span class="muted small">Overdue and lapsed clients, with a ready-to-send text.</span></div></div>`, 3)}
+    ${rise(`<button class="btn primary lg block press" data-act="setup" style="margin-top:16px">${icon('sparkle')} Set up my studio</button>
+    <button class="btn ghost block" data-act="dismissOnboard" style="margin-top:6px">Explore with demo clients first</button>`, 4)}
+  </div>`, { focus: true });
+}
+function viewHome() {
+  if (!S().onboarded) return viewWelcome();
+  setTab('home');
+  const s = S(), t = todayISO(), month = t.slice(0, 7);
+  const statuses = db.clients.map(c => ({ c, st: clientStatus(c) }));
+  const overdue = statuses.filter(x => x.st.kind === 'overdue').sort((a, b) => a.st.until - b.st.until);
+  const soon = statuses.filter(x => x.st.kind === 'soon').sort((a, b) => a.st.until - b.st.until);
+  const lapsed = statuses.filter(x => x.st.kind === 'lapsed').sort((a, b) => a.st.since - b.st.since);
+  const mv = db.visits.filter(v => v.date.startsWith(month)), rev = mv.reduce((n, v) => n + (Number(v.price) || 0), 0);
+  const rets = db.visits.filter(v => v.retention != null && daysBetween(v.date, t) <= 90).map(v => v.retention);
+  const avgRet = rets.length ? Math.round(rets.reduce((a, b) => a + b, 0) / rets.length) : 0;
+  const waiting = [...overdue, ...lapsed], fillPrice = c => { const f = visitsOf(c.id).find(v => v.service === 'Fill' && v.price); return Number(f?.price) || 75; };
+  const atRisk = waiting.reduce((n, x) => n + fillPrice(x.c), 0), pending = waiting.filter(x => !remindedToday(x.c));
+  const next = soon[0];
+  const todays = statuses.filter(x => x.st.kind === 'booked' && x.st.appt.date === t).sort((a, b) => (a.st.appt.time || '').localeCompare(b.st.appt.time || ''));
+  const todaysHTML = todays.length ? rise(`<h3 class="eyebrow">Today’s appointments <span class="count">${todays.length}</span></h3><div class="card tight">${todays.map(({ c, st }) => `<div class="item"><a href="#/client/${c.id}">${avatar(c)}</a>
+    <a class="grow" href="#/client/${c.id}" style="text-decoration:none;color:inherit;min-width:0"><div class="name">${esc(c.name)}</div><div class="meta">${st.appt.time ? fmtTime(st.appt.time) : 'Any time'} · ${esc(st.last.style)} · ${esc(st.last.setType)}</div></a>
+    <a class="btn primary sm press" href="#/visit/new/${c.id}">Start</a></div>`).join('')}</div>`, 2) : '';
+  const lb = s.lastBackup, needBackup = db.clients.filter(c => !c.demo).length >= 3 && (!lb || daysBetween(lb, t) > 14);
+  const backupHTML = needBackup ? rise(`<div class="note">${icon('shield', 18)}<span class="grow">Your client book only lives on this phone. Back it up${lb ? ` (last: ${fmtDate(lb)})` : ''}.</span><button class="btn sm press" data-act="exportData">Back up</button></div>`, 2) : '';
+  const deco = `<svg class="deco" viewBox="0 0 360 220">${mapGeometry(makeZones('Cat eye', 7, 'C')).lashes.map(l => `<path d="M${l.s.x},${l.s.y} Q${l.c.x},${l.c.y} ${l.e.x},${l.e.y}" stroke="#fff" stroke-width="2.2" fill="none" stroke-linecap="round"/>`).join('')}<path d="M40,168 Q180,66 320,168" stroke="#fff" stroke-width="3" fill="none"/></svg>`;
+  const hero = waiting.length
+    ? `<div class="hero">${deco}<div class="eyebrow">Rebook radar</div><div class="big" data-count="${atRisk}" data-pre="$">$0</div>
+       <p>in fills waiting · ${plural(waiting.length, 'client')} past their refill${pending.length < waiting.length ? ` · ${waiting.length - pending.length} reminded today` : ''}</p>
+       <div class="row wrapr">${pending.length ? `<button class="btn white press" data-act="queue">${icon('bell', 18)} Remind ${pending.length === 1 ? firstName(pending[0].c.name) : `all ${pending.length}`}</button>` : `<span class="btn glass">${icon('check', 18)} All reminded today</span>`}<a class="btn glass press" href="#/visit/new">${icon('plus', 18)} New visit</a></div></div>`
+    : `<div class="hero">${deco}<div class="eyebrow">Rebook radar</div><div class="big">All caught up ✨</div>
+       <p>${next ? `Next up: ${esc(firstName(next.c.name))} — ${next.st.label.toLowerCase()}.` : 'No one is past their refill date.'}</p>
+       <a class="btn white press" href="#/visit/new">${icon('plus', 18)} Start a visit</a></div>`;
+  const section = (title, arr, emptyMsg, i) => rise(`<h3 class="eyebrow">${title} <span class="count">${arr.length}</span></h3><div class="card tight">${arr.length ? arr.map(({ c, st }) => clientRow(c, st)).join('') : `<div class="empty small">${emptyMsg}</div>`}</div>`, i);
+  mount(`${rise(`<h1>${greeting()}${s.artist ? `, <em>${esc(s.artist)}</em>` : ''}</h1><p class="sub">${fmtDate(t, { weekday: 'long', month: 'long', day: 'numeric' })}</p>`, 0)}
+    ${rise(hero, 1)}${backupHTML}${todaysHTML}
+    ${rise(`<div class="stats"><div class="stat"><b data-count="${db.clients.length}">0</b><span>clients</span></div>
+      <div class="stat"><b data-count="${rev}" data-pre="$">$0</b><span>this month</span></div>
+      <div class="stat">${avgRet ? `<b data-count="${avgRet}" data-suf="%">0%</b>` : '<b>—</b>'}<span>avg retention</span></div></div>`, 2)}
+    ${section('Overdue for a refill', overdue, 'Nobody overdue. Lovely.', 3)}
+    ${section('Due this week', soon, 'No refills due in the next 7 days.', 4)}
+    ${section('Win back · 45+ days', lapsed, 'No lapsed clients.', 5)}`);
+}
+
+/* ---------- Clients ---------- */
+let clientFilter = 'all';
+function viewClients(q = '') {
+  setTab('clients');
+  const all = db.clients.map(c => ({ c, st: clientStatus(c) }));
+  const groups = { all: all, due: all.filter(x => x.st.kind === 'soon'), overdue: all.filter(x => x.st.kind === 'overdue'), lapsed: all.filter(x => x.st.kind === 'lapsed'), booked: all.filter(x => x.st.kind === 'booked') };
+  const list = groups[clientFilter].filter(({ c }) => !q || (c.name + ' ' + c.phone + ' ' + c.instagram).toLowerCase().includes(q.toLowerCase())).sort((a, b) => a.c.name.localeCompare(b.c.name));
+  const chip = (k, label) => `<button class="chip" data-act="filter" data-v="${k}" aria-pressed="${clientFilter === k}">${label} <span class="muted">${groups[k].length}</span></button>`;
+  mount(`${rise(`<div class="row" style="margin-top:18px"><h1 class="grow" style="margin:0">Clients</h1><button class="btn primary sm press" data-act="newClient">${icon('plus', 16)} Add</button></div>`, 0)}
+    ${rise(`<div class="search" style="margin:14px 0 10px">${icon('search', 18)}<input type="search" id="q" placeholder="Search name, phone or @instagram" value="${esc(q)}" aria-label="Search clients"></div>
+    <div class="chips" style="margin-bottom:12px">${chip('all', 'All')}${chip('overdue', 'Overdue')}${chip('due', 'Due soon')}${chip('lapsed', 'Lapsed')}${chip('booked', 'Booked')}</div>`, 1)}
+    ${rise(`<div class="card tight" id="clientList">${list.length ? list.map(({ c, st }) => `<a class="item" href="#/client/${c.id}">${avatar(c)}
+      <span class="grow" style="min-width:0"><span class="name" style="display:block">${c.allergies ? `<span style="color:var(--bad)" title="Allergy on file">⚠ </span>` : ''}${esc(c.name)}</span>
+      <span class="row" style="gap:7px;margin-top:3px"><span class="pill ${st.cls}"><i></i>${esc(st.label)}</span><span class="meta">${st.last ? `${esc(st.last.style)} · ${mapSummary(st.last).range}` : 'No visits yet'}</span></span></span>
+      <span class="muted">${icon('chevR', 18)}</span></a>`).join('') : `<div class="empty">${emptyArt()}${q ? 'No matches.' : clientFilter === 'all' ? 'No clients yet — add your first one.' : 'Nobody here right now.'}</div>`}</div>`, 2)}`);
+  const qi = $('#q'); qi.oninput = () => { const pos = qi.selectionStart; viewClients(qi.value); const n = $('#q'); n.focus(); n.setSelectionRange(pos, pos); $('.view').style.animation = 'none'; $$('.rise').forEach(r => r.style.animation = 'none'); };
+}
+function retChart(vals) {
+  const w = 320, h = 104, px = 18, py = 22, n = vals.length;
+  const X = i => px + (w - 2 * px) * i / (n - 1), Y = v => h - py + 6 - (v / 100) * (h - 2 * py);
+  const pts = vals.map((v, i) => `${X(i).toFixed(1)},${Y(v).toFixed(1)}`);
+  const area = `M${X(0)},${h - 4} L${pts.join(' L')} L${X(n - 1)},${h - 4}Z`;
+  return `<svg class="chart" viewBox="0 0 ${w} ${h}" role="img" aria-label="Retention ${vals.join('%, ')}%"><defs><linearGradient id="rg" x1="0" x2="0" y1="0" y2="1"><stop offset="0" style="stop-color:var(--accent);stop-opacity:.28"/><stop offset="1" style="stop-color:var(--accent);stop-opacity:0"/></linearGradient></defs>
+    <line class="ref" x1="${px}" x2="${w - px}" y1="${Y(60)}" y2="${Y(60)}"/><path d="${area}" fill="url(#rg)"/><polyline class="ln" points="${pts.join(' ')}"/>
+    ${vals.map((v, i) => `<circle class="pt" cx="${X(i)}" cy="${Y(v)}" r="4"/><text class="pl" x="${X(i)}" y="${Y(v) - 10}">${v}%</text>`).join('')}</svg>`;
+}
+function viewClient(id) {
+  setTab('clients');
+  const c = getClient(id); if (!c) return notFound();
+  const vs = visitsOf(id), st = clientStatus(c), last = vs[0];
+  const rets = vs.filter(v => v.retention != null).reverse().map(v => v.retention);
+  const avg = rets.length ? Math.round(rets.reduce((a, b) => a + b, 0) / rets.length) : 0;
+  const spend = vs.reduce((n, v) => n + (Number(v.price) || 0), 0);
+  const avgGap = vs.length > 1 ? Math.round(daysBetween(vs[vs.length - 1].date, vs[0].date) / (vs.length - 1)) : 0;
+  let tip = '';
+  if (rets.length >= 2 && rets.slice(-2).every(r => r < 60)) tip = 'Retention has been under 60% for two fills. Try a shorter refill interval, a lighter diameter, or a quick aftercare check-in.';
+  else if (avgGap > 21 && vs.length > 2) tip = `She averages ${avgGap} days between visits. A standing appointment could keep her fills shorter.`;
+  const ig = c.instagram ? c.instagram.replace(/^@/, '') : '';
+  mount(`${rise(`<div style="margin-top:14px"><a href="#/clients" class="btn ghost sm" style="padding-left:0">${icon('chevL', 18)} Clients</a></div>
+    <div class="prof">${avatar(c, 84)}<h1>${esc(c.name)}</h1><div class="row wrapr" style="justify-content:center;gap:6px"><span class="pill ${st.cls}"><i></i>${esc(st.label)}</span>${c.eyeShape ? `<span class="pill accent">${esc(c.eyeShape)} eyes</span>` : ''}</div></div>
+    <div class="qa">
+      ${c.phone ? `<a href="${smsHref(c.phone, '')}"><span class="qi">${icon('msg')}</span>Text</a><a href="tel:${esc(c.phone.replace(/[^\d+]/g, ''))}"><span class="qi">${icon('phone')}</span>Call</a>` : ''}
+      ${ig ? `<a href="https://instagram.com/${esc(ig)}" target="_blank" rel="noopener"><span class="qi">${icon('ig')}</span>Instagram</a>` : ''}
+      ${last ? `<button data-act="remind" data-id="${c.id}"><span class="qi">${icon(remindedToday(c) ? 'check' : 'bell')}</span>${remindedToday(c) ? 'Reminded' : 'Remind'}</button>` : ''}
+      <a href="#/consent/${c.id}${c.consent ? '' : '/new'}"><span class="qi">${icon('shield')}</span>Consent</a>
+      <button data-act="editClient" data-id="${c.id}"><span class="qi">${icon('edit')}</span>Edit</button>
+    </div>`, 0)}
+    ${c.consent ? rise(`<a class="note" href="#/consent/${c.id}" style="text-decoration:none">${icon('shield', 18)}<span class="grow">Consent signed ${fmtDate(c.consent.date, { month: 'short', day: 'numeric', year: 'numeric' })}</span>${icon('chevR', 16)}</a>`, 1)
+      : rise(`<a class="note" href="#/consent/${c.id}/new" style="text-decoration:none;background:var(--warn-soft)">${icon('shield', 18)}<span class="grow"><b>No consent form on file.</b> Tap to have her sign on your phone.</span>${icon('chevR', 16)}</a>`, 1)}
+    ${c.allergies ? rise(`<div class="flag">${icon('shield', 18)} <span><b>Allergy:</b> ${esc(c.allergies)}</span>${c.patchTest ? ` · patch test ${fmtDate(c.patchTest, { month: 'short', day: 'numeric', year: 'numeric' })}` : ''}</div>`, 1) : c.patchTest ? rise(`<div class="note">${icon('shield', 18)} Patch test on file: ${fmtDate(c.patchTest, { month: 'short', day: 'numeric', year: 'numeric' })}</div>`, 1) : ''}
+    ${last ? rise(`<div class="card"><div class="row"><div class="grow"><div class="eyebrow">Her current map</div><div style="font-weight:600;margin-top:2px">${esc(last.setType)} · ${esc(last.style)} · ${mapSummary(last).curls} · ${last.diameter}</div></div><a class="btn sm press" href="#/card/${last.id}">${icon('eye', 16)} Card</a></div>
+      <div class="mapwrap" style="margin-top:8px">${mapSVG(last.zones, { grow: true })}</div>${legendHTML(last.zones)}
+      <a class="btn primary block lg press" href="#/visit/new/${c.id}" style="margin-top:14px">${icon('refresh', 19)} Start fill from this map</a></div>`, 2)
+      : rise(`<a class="btn primary block lg press" href="#/visit/new/${c.id}" style="margin:6px 0 12px">${icon('sparkle', 19)} Start her first set</a>`, 2)}
+    ${vs.length ? rise(`<div class="stats four"><div class="stat"><b data-count="${vs.length}">0</b><span>visits</span></div><div class="stat"><b data-count="${spend}" data-pre="$">$0</b><span>lifetime</span></div>
+      <div class="stat">${avg ? `<b data-count="${avg}" data-suf="%">0%</b>` : '<b>—</b>'}<span>avg retention</span></div><div class="stat">${avgGap ? `<b data-count="${avgGap}" data-suf="d">0d</b>` : '<b>—</b>'}<span>avg refill gap</span></div></div>`, 3) : ''}
+    ${rets.length >= 2 ? rise(`<div class="card" style="margin-top:12px"><div class="row"><b class="grow">Retention trend</b><span class="small muted">dashed = 60%</span></div>${retChart(rets)}</div>`, 4) : ''}
+    ${tip ? rise(`<div class="note">${icon('sparkle', 18)}<span>${esc(tip)}</span></div>`, 5) : ''}
+    ${c.notes ? rise(`<div class="card"><div class="eyebrow">Notes & preferences</div><p style="margin:6px 0 0;white-space:pre-wrap">${esc(c.notes)}</p></div>`, 5) : ''}
+    ${vs.length ? rise(`<h3 class="eyebrow">History <span class="count">${vs.length}</span></h3><div class="timeline">${vs.map(v => `<a class="tl press" href="#/card/${v.id}">
+        <div class="mini">${mapSVG(v.zones, { captions: false, labels: false })}</div>
+        <div class="grow" style="min-width:0"><div class="name">${esc(v.service)} · ${fmtDate(v.date, { month: 'short', day: 'numeric', year: 'numeric' })}</div>
+        <div class="meta">${esc(v.style)} · ${mapSummary(v).curls} · ${mapSummary(v).range}</div>
+        <div class="meta">${money(v.price)}${v.retention != null ? ` · ${v.retention}% retained` : ''}${v.photos?.length ? ` · ${plural(v.photos.length, 'photo')}` : ''}</div></div>
+        <span class="muted">${icon('chevR', 18)}</span></a>`).join('')}</div>`, 6) : ''}
+    <div style="margin:22px 0;text-align:center"><button class="btn sm ghost danger" data-act="deleteClient" data-id="${c.id}">${icon('trash', 16)} Delete client</button></div>`);
+}
+
+/* ---------- Visit wizard ---------- */
+function viewPickClient() {
+  setTab('visit');
+  const recent = db.clients.map(c => ({ c, st: clientStatus(c) })).sort((a, b) => (b.st.last?.date || '').localeCompare(a.st.last?.date || ''));
+  mount(`${rise(`<h1>Who’s in your <em>chair?</em></h1><p class="sub">Pick a client, or add someone new.</p>`, 0)}
+    ${rise(`<div class="card"><label class="field" style="margin:0"><span>New client</span><div class="row"><input type="text" id="quickName" placeholder="Her name" autocomplete="off" enterkeyhint="go"><button class="btn primary press" data-act="quickClient">Start</button></div></label></div>`, 1)}
+    ${rise(`<div class="search" style="margin:16px 0 10px">${icon('search', 18)}<input type="search" id="pq" placeholder="Search clients" aria-label="Search clients"></div>`, 2)}
+    ${rise(`<div class="card tight" id="pickList">${recent.map(({ c, st }) => `<a class="item" href="#/visit/new/${c.id}" data-name="${esc(c.name.toLowerCase())}">${avatar(c)}<span class="grow" style="min-width:0"><span class="name" style="display:block">${esc(c.name)}</span><span class="meta" style="display:block">${st.last ? 'Last: ' + esc(st.last.style) + ' · ' + fmtDate(st.last.date) : 'No visits yet'}</span></span><span class="pill ${st.cls}"><i></i>${esc(st.label)}</span></a>`).join('') || `<div class="empty">${emptyArt()}No clients yet.</div>`}</div>`, 3)}`);
+  $('#pq').oninput = e => $$('#pickList .item').forEach(el => el.hidden = !el.dataset.name.includes(e.target.value.toLowerCase()));
+  $('#quickName').onkeydown = e => { if (e.key === 'Enter') act('quickClient'); };
+}
+function newDraft(cid) {
+  const last = visitsOf(cid)[0], s = S();
+  if (last) return { ...clone(last), id: uid(), date: todayISO(), service: 'Fill', retention: null, photos: [], notes: '', demo: false, refillDays: last.refillDays || s.refillDays, prefilledFrom: last.date };
+  return { id: uid(), clientId: cid, date: todayISO(), service: 'Full set', setType: 'Hybrid', style: 'Natural', curl: 'C', diameter: '0.07', zones: makeZones('Natural', 7, 'C'), adhesive: '', temp: '', humidity: '', retention: null, price: '', notes: '', photos: [], refillDays: s.refillDays };
+}
+function viewEditor(visitId, cid) {
+  setTab('visit');
+  if (visitId === 'new') { if (!getClient(cid)) return viewPickClient(); draft = newDraft(cid); draft._new = true; }
+  else { const v = getVisit(visitId); if (!v) return notFound(); draft = clone(v); delete draft.prefilledFrom; }
+  sel = Math.floor(draft.zones.length / 2); dirty = false; step = 0; shownZones = null;
+  const c = getClient(draft.clientId);
+  mount(`<div class="wiz-head"><div class="row"><a class="iconbtn press" href="#/client/${c.id}" aria-label="Close">${icon('x', 18)}</a>
+      <div class="grow wiz-title">${draft._new ? (draft.service === 'Fill' ? 'Fill' : 'New set') : 'Edit visit'} · ${esc(firstName(c.name))}</div><span style="width:42px"></span></div>
+      <div class="steps" id="steps"></div></div>
+    <div id="stepBody"></div><div class="wiz-pad"></div>
+    <div class="wiz-foot"><div class="wrap" id="wizFoot"></div></div>`, { focus: true });
+  renderStep(0);
+}
+const STEP_NAMES = ['Lash map', 'Set details', 'Photos & refill'];
+function renderStep(n, dir = 'fwd') {
+  step = n; const v = draft, c = getClient(v.clientId);
+  $('#steps').innerHTML = STEP_NAMES.map((s, i) => `<button class="${i < n ? 'done' : i === n ? 'on' : ''}" data-act="goStep" data-i="${i}"><span class="bar"><i></i></span>${i + 1}. ${s}</button>`).join('');
+  const chip = (group, val, cur) => `<button class="chip" data-act="set" data-k="${group}" data-v="${esc(val)}" aria-pressed="${String(val) === String(cur)}">${esc(val)}</button>`;
+  let html = '';
+  if (n === 0) {
+    html = `${c.allergies ? `<div class="flag">${icon('shield', 18)} ${esc(c.allergies)}</div>` : ''}
+    ${v.prefilledFrom ? `<div class="note">${icon('refresh', 18)}<span>Copied from her <b>${fmtDate(v.prefilledFrom)}</b> visit — change only what’s different.</span></div>` : ''}
+    <div class="card"><div class="mapwrap" id="mapWrap"><div id="mapBox"></div>${!S().hintSeen ? `<div class="hint" id="hint">${icon('drag', 15)} Drag a number up or down</div>` : ''}</div>
+      <div id="legendBox"></div><div class="zones" id="zoneRow"></div><div id="zoneEd" style="margin-top:14px"></div></div>
+    <div class="grid2"><button class="btn press" data-act="tryOn">${icon('camera', 18)} Preview on her eye</button><button class="btn press" data-act="eyeGuide">${icon('eye', 18)} Eye-shape guide</button></div>
+    <h3 class="eyebrow">Style</h3>
+    <div class="presets">${Object.keys(PRESETS).map(p => `<button class="preset press" data-act="preset" data-v="${p}" aria-pressed="${p === v.style}">${mapSVG(makeZones(p, 7, v.zones[0]?.curl || 'C'), { captions: false, labels: false })}${p}</button>`).join('')}</div>
+    <details class="more"><summary>${icon('chevR', 14)} More map options</summary><div class="card" style="margin-top:6px"><div class="row wrapr" style="justify-content:space-between">
+      <span class="small muted">Zones</span><div class="stepper"><button data-act="zonesN" data-d="-1" aria-label="Fewer zones">−</button><output id="zn">${v.zones.length}</output><button data-act="zonesN" data-d="1" aria-label="More zones">+</button></div></div>
+      <div class="grid2" style="margin-top:12px"><button class="btn sm press" data-act="allLen" data-d="-1">All −1 mm</button><button class="btn sm press" data-act="allLen" data-d="1">All +1 mm</button></div></div></details>`;
+  } else if (n === 1) {
+    html = `<div class="card"><div class="eyebrow" style="margin-bottom:8px">Service</div><div class="seg" role="group" aria-label="Service">${SERVICES.map(x => `<button data-act="set" data-k="service" data-v="${x}" aria-pressed="${x === v.service}">${x}</button>`).join('')}</div>
+      <div class="grid2" style="margin-top:14px"><label class="field"><span>Date</span><input type="date" data-k="date" value="${v.date}"></label>
+      <label class="field"><span>Price <span class="hint">USD</span></span><input type="number" inputmode="decimal" min="0" data-k="price" value="${esc(v.price)}" placeholder="75"></label></div></div>
+    <div class="card"><div class="eyebrow" style="margin-bottom:8px">Set type</div><div class="chips">${SET_TYPES.map(x => chip('setType', x, v.setType)).join('')}</div>
+      <div class="eyebrow" style="margin:16px 0 8px">Diameter (mm)</div><div class="chips">${DIAMETERS.map(x => chip('diameter', x, v.diameter)).join('')}</div></div>
+    ${v.service === 'Fill' ? `<div class="card"><div class="eyebrow">Retention since last visit</div><div class="retval" id="retOut">${v.retention != null ? v.retention + '%' : '—'}<small>${v.retention != null ? retWord(v.retention) : 'Slide to rate how much of the set was still on'}</small></div>
+      <div class="range"><input type="range" min="0" max="100" step="5" id="ret" value="${v.retention ?? 70}" style="--v:${v.retention ?? 70}%" aria-label="Retention percent"></div></div>` : ''}
+    <div class="card"><div class="eyebrow" style="margin-bottom:8px">Room & products <span class="muted" style="text-transform:none;letter-spacing:0;font-weight:500">— optional</span></div><div class="grid3 fields">
+      <label class="field"><span>Adhesive</span><input type="text" data-k="adhesive" value="${esc(v.adhesive)}" placeholder="Glue name"></label>
+      <label class="field"><span>Room °F</span><input type="number" inputmode="numeric" data-k="temp" value="${esc(v.temp)}" placeholder="72"></label>
+      <label class="field"><span>Humidity %</span><input type="number" inputmode="numeric" data-k="humidity" value="${esc(v.humidity)}" placeholder="50"></label></div></div>`;
+  } else {
+    html = `<div class="card"><div class="eyebrow" style="margin-bottom:10px">Before & after</div><div class="photos">${['before', 'after'].map(kind => {
+        const ph = (v.photos || []).find(p => p.kind === kind);
+        return `<label class="photo"><span class="tag">${kind}</span>${ph ? `<img data-photo="${ph.id}" alt="${kind} photo">` : `<span class="ph">${icon('camera', 26)}Add ${kind}</span>`}<input type="file" accept="image/*" capture="environment" data-photo-kind="${kind}"></label>`;
+      }).join('')}${(() => { const pv = (v.photos || []).find(p => p.kind === 'preview'); return pv ? `<div class="photo"><span class="tag">Style preview</span><img data-photo="${pv.id}" alt="Style preview"></div>` : ''; })()}</div><p class="small muted" style="margin:10px 0 0">Photos stay on this phone.</p></div>
+    <div class="card"><div class="eyebrow" style="margin-bottom:8px">Next refill in</div><div class="chips">${[14, 18, 21, 28].map(d => `<button class="chip" data-act="set" data-k="refillDays" data-v="${d}" aria-pressed="${+v.refillDays === d}">${d} days</button>`).join('')}</div>
+      <div class="duebox" id="dueBox"></div></div>
+    <div class="card"><div class="eyebrow" style="margin-bottom:8px">Next appointment <span class="muted" style="text-transform:none;letter-spacing:0;font-weight:500">— if she booked before leaving</span></div>
+      <div class="grid2"><label class="field"><span>Date</span><input type="date" id="apDate" value="${esc(v.nextAppt?.date || '')}"></label><label class="field"><span>Time</span><input type="time" id="apTime" value="${esc(v.nextAppt?.time || '')}"></label></div>
+      <div class="row wrapr"><button class="chip" data-act="apptDue">Use refill date</button>${v.nextAppt?.date ? '<button class="chip" data-act="apptClear">Clear</button>' : ''}</div>
+      ${v.nextAppt?.date ? `<p class="small muted" style="margin:10px 0 0">Booked clients skip refill reminders, and her passport adds this exact time to her calendar.</p>` : ''}</div>
+    <div class="card"><label class="field" style="margin:0"><span>Notes for next time</span><textarea data-k="notes" placeholder="e.g. right eye sheds faster, loved the wispy outer corner">${esc(v.notes)}</textarea></label></div>
+    ${!v._new ? `<div style="text-align:center;margin:8px 0"><button class="btn sm ghost danger" data-act="deleteVisit">${icon('trash', 16)} Delete visit</button></div>` : ''}`;
+  }
+  const body = $('#stepBody'); body.className = 'stepbody ' + (reduced ? '' : dir); body.innerHTML = html;
+  $('#wizFoot').innerHTML = `${n > 0 ? `<button class="btn press" data-act="goStep" data-i="${n - 1}" style="flex:0 0 auto">${icon('chevL', 18)} Back</button>` : `<a class="btn press" href="#/client/${c.id}" style="flex:0 0 auto">Cancel</a>`}
+    ${n < 2 ? `<button class="btn primary grow press" data-act="goStep" data-i="${n + 1}">Next: ${STEP_NAMES[n + 1]} ${icon('chevR', 18)}</button>` : `<button class="btn primary grow press" data-act="saveVisit" id="saveBtn">${icon('sparkle', 18)} Save & make refill card</button>`}`;
+  window.scrollTo({ top: 0, behavior: reduced ? 'auto' : 'smooth' });
+  if (n === 0) { shownZones = null; paintZones(false, true); }
+  if (n === 1) { const r = $('#ret'); if (r) r.oninput = () => { draft.retention = +r.value; r.style.setProperty('--v', r.value + '%'); $('#retOut').innerHTML = `${r.value}%<small>${retWord(+r.value)}</small>`; dirty = true; }; }
+  if (n === 2) {
+    paintDue(); hydratePhotos(body);
+    const setAppt = () => { const d = $('#apDate').value, tm = $('#apTime').value; draft.nextAppt = d ? { date: d, time: tm } : null; dirty = true; };
+    $('#apDate').oninput = setAppt; $('#apTime').oninput = setAppt;
+  }
+}
+const retWord = r => r >= 80 ? 'Great retention' : r >= 60 ? 'Healthy' : r >= 40 ? 'Below average — check aftercare' : 'Low — consider a shorter interval';
+function paintDue() {
+  const due = addDays(draft.date, draft.refillDays), box = $('#dueBox'); if (!box) return;
+  box.innerHTML = `<div class="calchip"><span>${fmtDate(due, { month: 'short' }).toUpperCase()}</span><b>${fmtDate(due, { day: 'numeric' })}</b></div><div><b>${fmtDate(due, { weekday: 'long' })}</b><div class="small muted">That’s what her card, passport and calendar reminder will say.</div></div>`;
+}
+function drawMap({ tween = true, grow = false } = {}) {
+  const box = $('#mapBox'); if (!box) return;
+  cancelAnimationFrame(tweenRaf);
+  const target = draft.zones, from = shownZones && shownZones.length === target.length ? shownZones : null;
+  if (!from || !tween || reduced) { shownZones = clone(target); box.innerHTML = mapSVG(target, { sel, interactive: true, grow }); return; }
+  const t0 = performance.now(), D = 260;
+  const frame = t => {
+    const k = Math.min(1, (t - t0) / D), e = 1 - Math.pow(1 - k, 3);
+    const z = target.map((zz, i) => ({ len: from[i].len + (zz.len - from[i].len) * e, curl: zz.curl }));
+    box.innerHTML = mapSVG(z, { sel, interactive: true });
+    if (k < 1) tweenRaf = requestAnimationFrame(frame); else shownZones = clone(target);
+  };
+  tweenRaf = requestAnimationFrame(frame);
+}
+function paintZones(tween = true, grow = false) {
+  const v = draft; if (!$('#mapBox')) return;
+  drawMap({ tween, grow });
+  $('#legendBox').innerHTML = legendHTML(v.zones);
+  const zn = $('#zn'); if (zn) zn.textContent = v.zones.length;
+  $('#zoneRow').innerHTML = v.zones.map((z, i) => `<button class="zonebtn" data-act="zone" data-i="${i}" aria-pressed="${i === sel}" aria-label="Zone ${i + 1}: ${z.len} millimeter ${z.curl} curl"><b>${z.len}</b><small><i style="background:${CURL_COLOR[z.curl]}"></i>${z.curl}</small></button>`).join('');
+  const z = v.zones[sel];
+  $('#zoneEd').innerHTML = `<div class="row" style="justify-content:space-between;margin-bottom:14px"><div><div class="eyebrow">Zone ${sel + 1} of ${v.zones.length}</div><div class="small muted">${sel === 0 ? 'Inner corner' : sel === v.zones.length - 1 ? 'Outer corner' : 'Tap any zone to edit it'}</div></div>
+    <div class="stepper"><button data-act="len" data-d="-1" aria-label="Shorter">−</button><output>${z.len}<span class="small muted"> mm</span></output><button data-act="len" data-d="1" aria-label="Longer">+</button></div></div>
+    <div class="row" style="justify-content:space-between;margin-bottom:8px"><span class="eyebrow">Curl · <span style="text-transform:none;letter-spacing:0;color:var(--ink-2)">${CURL_HINT[z.curl] || ''}</span></span><button class="btn ghost sm" data-act="curlAll" style="min-height:28px;padding:2px 6px">Use ${z.curl} everywhere</button></div>
+    <div class="curls">${CURLS.map(cu => `<button class="curl" data-act="curl" data-v="${cu}" aria-pressed="${cu === z.curl}" style="color:${CURL_COLOR[cu]}" aria-label="${cu} curl">${curlIcon(cu)}<span style="color:var(--ink-2)">${cu}</span></button>`).join('')}</div>`;
+}
+function markHintSeen() { if (!S().hintSeen) { db.settings.hintSeen = true; save(); const h = $('#hint'); if (h) { h.style.transition = 'opacity .3s'; h.style.opacity = 0; setTimeout(() => h.remove(), 300); } } }
+
+/* Drag a zone (label or its fan) up/down to change length — the fastest way to edit in the chair. */
+app.addEventListener('pointerdown', e => {
+  const t = e.target.closest('#mapBox [data-zone]'); if (!t || !draft) return;
+  const i = +t.dataset.zone, w = $('#mapBox svg').getBoundingClientRect().width;
+  drag = { i, y: e.clientY, len: draft.zones[i].len, ppm: Math.max(11, MAP_SCALE * w / MAP_W * 2.2), moved: false };
+  if (sel !== i) { sel = i; drawMap({ tween: false }); }
+  e.preventDefault();
+});
+window.addEventListener('pointermove', e => {
+  if (!drag) return;
+  const dy = drag.y - e.clientY; if (Math.abs(dy) > 5) drag.moved = true; if (!drag.moved) return;
+  const nl = clampLen(drag.len + Math.round(dy / drag.ppm));
+  if (nl !== draft.zones[drag.i].len) { draft.zones[drag.i].len = nl; dirty = true; haptic(5); drawMap({ tween: false }); const o = $('#zoneEd output'); if (o) o.innerHTML = `${nl}<span class="small muted"> mm</span>`; }
+});
+window.addEventListener('pointerup', () => { if (!drag) return; const d = drag; drag = null; sel = d.i; paintZones(false); if (d.moved) markHintSeen(); });
+window.addEventListener('pointercancel', () => { drag = null; });
+
+/* ---------- Card ---------- */
+async function viewCard(id) {
+  setTab('clients');
+  const v = getVisit(id); if (!v) return notFound();
+  const c = getClient(v.clientId), s = S(), link = passportLink(v);
+  const canFileShare = !!(navigator.canShare && navigator.canShare({ files: [new File([''], 'x.png', { type: 'image/png' })] }));
+  const msg = fill(s.passportMsg, c, { link }), sm = mapSummary(v);
+  mount(`${rise(`<div style="margin-top:14px"><a href="#/client/${c.id}" class="btn ghost sm" style="padding-left:0">${icon('chevL', 18)} ${esc(c.name)}</a></div>
+    <h1>Ready for <em>${esc(firstName(c.name))}</em></h1><p class="sub">${esc(v.service)} · ${fmtDate(v.date, { month: 'long', day: 'numeric' })} · ${v.nextAppt?.date ? `booked ${fmtLong(v.nextAppt.date)}${v.nextAppt.time ? ' · ' + fmtTime(v.nextAppt.time) : ''}` : `refill ${fmtLong(v.nextDue)}`}</p>`, 0)}
+    <div id="cardSlot"><div class="skeleton"></div></div>
+    ${rise(`<button class="btn primary lg block press" data-act="shareCard" style="margin-top:14px">${icon(canFileShare ? 'share' : 'download', 19)} ${canFileShare ? 'Share card' : 'Download card'}</button>
+    <div class="grid2" style="margin-top:10px">
+      ${c.phone ? `<a class="btn press" href="${smsHref(c.phone, msg)}">${icon('msg', 18)} Text her the passport</a>` : `<button class="btn press" data-act="copyMsg">${icon('copy', 18)} Copy message for DM</button>`}
+      <button class="btn press" data-act="copyLink">${icon('link', 18)} Copy passport link</button>
+      <a class="btn press" href="#p=${link.split('#p=')[1]}">${icon('eye', 18)} See what she sees</a>
+      <a class="btn press" href="#/visit/${v.id}">${icon('edit', 18)} Edit visit</a>
+    </div>`, 2)}
+    ${location.protocol === 'file:' ? rise(`<div class="note" style="margin-top:12px">${icon('link', 18)}<span>Running from a local file, so passport links only open on this device. Host Fillcard (free) and links work for every client.</span></div>`, 3) : ''}
+    ${!bookingTarget(s) ? rise(`<div class="note" style="margin-top:12px">${icon('plus', 18)}<span>Set how clients book in <a href="#/settings">Studio</a> so the card gets a scan-to-book QR code.</span></div>`, 3) : ''}
+    ${rise(`<div class="card" style="margin-top:14px"><div class="kv">
+      <div><span>Set</span><b>${esc(v.setType)}</b></div><div><span>Style</span><b>${esc(v.style)}</b></div>
+      <div><span>Curl · diameter</span><b>${sm.curls} · ${v.diameter}</b></div><div><span>Lengths</span><b>${sm.lengths}</b></div>
+      ${v.adhesive ? `<div><span>Adhesive</span><b>${esc(v.adhesive)}</b></div>` : ''}${v.temp || v.humidity ? `<div><span>Room</span><b>${esc(v.temp || '—')}°F · ${esc(v.humidity || '—')}%</b></div>` : ''}
+      ${v.retention != null ? `<div><span>Retention</span><b>${v.retention}%</b></div>` : ''}${v.price !== '' ? `<div><span>Price</span><b>${money(v.price)}</b></div>` : ''}
+    </div>
+    ${(v.photos || []).length ? `<div class="photos" style="margin-top:10px">${v.photos.map(p => `<div class="photo"><span class="tag">${p.kind}</span><img data-photo="${p.id}" alt="${p.kind} photo"></div>`).join('')}</div>` : ''}
+    ${v.notes ? `<p style="white-space:pre-wrap;margin:12px 0 0">${esc(v.notes)}</p>` : ''}</div>
+    <a class="btn block press" href="#/visit/new/${c.id}" style="margin-bottom:20px">${icon('refresh', 18)} Start her next fill</a>`, 4)}`);
+  hydratePhotos(app);
+  const cv = await drawCard(v);
+  cv.toBlob(b => {
+    const slot = $('#cardSlot'); if (!b || !slot) return;
+    const img = new Image(); img.className = 'cardprev'; img.alt = `Refill card for ${firstName(c.name)}`; img.width = 1080; img.height = 1350;
+    img.src = URL.createObjectURL(b); img._blob = b; img.id = 'cardImg'; slot.replaceChildren(img);
+  }, 'image/png');
+}
+
+/* ---------- Studio (settings) ---------- */
+let installEvt = null;
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = e; });
+function viewSettings() {
+  setTab('settings');
+  const s = S(), hasDemo = db.clients.some(c => c.demo);
+  mount(`${rise(`<h1>Your <em>studio</em></h1><p class="sub">This is what clients see on their card and passport.</p>`, 0)}
+    ${rise(`<div class="card">
+      <div class="grid2"><label class="field"><span>Your name</span><input type="text" data-s="artist" value="${esc(s.artist)}" placeholder="Jess"></label>
+      <label class="field"><span>Studio name</span><input type="text" data-s="studio" value="${esc(s.studio)}" placeholder="Jess Lash Studio"></label></div>
+      <div id="bookBox">${bookingFieldsHTML(s)}</div>
+      <label class="field"><span>Instagram</span><input type="text" data-s="instagram" value="${esc(s.instagram)}" placeholder="yourstudio"></label>
+      <div class="field" style="margin:0"><span>Brand color</span>${swatchesHTML(s.color)}</div></div>`, 1)}
+    ${rise(`<div class="card"><label class="field"><span>Default refill interval</span><div class="chips">${[14, 18, 21, 28].map(d => `<button class="chip" data-act="refillDefault" data-v="${d}" aria-pressed="${+s.refillDays === d}">${d} days</button>`).join('')}</div></label>
+      <label class="field"><span>Aftercare <span class="hint">one per line · first 4 go on the card</span></span><textarea data-s="aftercare" rows="7">${esc(s.aftercare)}</textarea></label>
+      <label class="field"><span>Refill reminder text <span class="hint">{name} {due} {booking} {artist}</span></span><textarea data-s="reminder" rows="3">${esc(s.reminder)}</textarea></label>
+      <label class="field" style="margin:0"><span>Passport message <span class="hint">{name} {link}</span></span><textarea data-s="passportMsg" rows="3">${esc(s.passportMsg)}</textarea></label></div>
+    <div class="card"><label class="field" style="margin:0"><span>Consent form text <span class="hint">a starting template, not legal advice. Check your state’s rules.</span></span><textarea data-s="consentText" rows="9">${esc(s.consentText)}</textarea></label></div>`, 2)}
+    ${rise(`<h3 class="eyebrow">Your data</h3><div class="card"><div class="note">${icon('shield', 18)}<span>Everything stays on this phone: no account, nothing uploaded. Export a backup before switching phones.</span></div>
+      <div class="grid2"><button class="btn sm press" data-act="exportData">${icon('download', 16)} Export backup</button><label class="btn sm press" style="position:relative">${icon('share', 16)} Import backup<input type="file" accept="application/json,.json" id="importFile" style="position:absolute;inset:0;opacity:0"></label>
+      ${hasDemo ? `<button class="btn sm press" data-act="clearDemo">Remove demo clients</button>` : ''}<button class="btn sm press danger" data-act="wipe">${icon('trash', 16)} Erase everything</button></div></div>`, 3)}
+    ${rise(`<h3 class="eyebrow">Put it on your home screen</h3><div class="card small">${installEvt ? `<button class="btn primary block press" data-act="install" style="margin-bottom:10px">Install Fillcard</button>` : ''}<p style="margin:0 0 6px"><b>iPhone:</b> open in Safari → Share → Add to Home Screen.</p><p style="margin:0"><b>Android:</b> Chrome menu ⋮ → Install app.</p></div>
+    <p class="small muted" style="text-align:center;margin:20px 0">Fillcard · made for independent lash artists</p>`, 4)}`);
+  bindSettingsInputs(app);
+}
+const swatchesHTML = cur => `<div class="swatches">${SWATCHES.map(c => `<button class="sw" data-act="color" data-v="${c}" aria-pressed="${c.toLowerCase() === String(cur).toLowerCase()}" style="background:${c}" aria-label="Brand color ${c}"></button>`).join('')}<label class="sw" style="background:conic-gradient(from 0deg,#e66,#ec6,#6c6,#6ce,#66e,#c6e,#e66);position:relative" aria-label="Custom color"><input type="color" data-s="color" value="${esc(cur)}" style="opacity:0;position:absolute;inset:0;width:100%;height:100%;cursor:pointer"></label></div>`;
+function bindSettingsInputs(root) {
+  $$('[data-s]', root).forEach(el => el.addEventListener(el.type === 'color' ? 'input' : 'input', () => {
+    let val = el.value; if (el.dataset.s === 'instagram') val = val.replace(/^@/, '').trim();
+    db.settings[el.dataset.s] = val; save(); if (el.dataset.s === 'color') { applyBrand(); $$('.sw[data-v]', root).forEach(b => b.setAttribute('aria-pressed', 'false')); }
+  }));
+  const f = $('#importFile', root); if (f) f.onchange = e => importData(e.target.files[0]);
+}
+
+/* ---------- Client passport (what the client opens) ---------- */
+function viewPassport(enc) {
+  document.body.classList.add('client-mode'); document.body.classList.remove('focus');
+  let p;
+  try { p = JSON.parse(unb64u(enc)); } catch { app.className = ''; app.innerHTML = '<div class="pp"><h1>Link not valid</h1><p class="sub">Ask your lash artist to send it again.</p></div>'; return; }
+  const zones = decodeZones(p.z), t = todayISO(), ap = p.ap && p.ap.date >= t ? p.ap : null, target = ap ? ap.date : p.due;
+  const left = target ? daysBetween(t, target) : 0, total = p.d && target ? Math.max(1, daysBetween(p.d, target)) : 14;
+  if (p.col) document.documentElement.style.setProperty('--accent', p.col);
+  const who = p.s || p.a || 'your lash artist', pct = Math.min(1, Math.max(0, left / total)), R = 74, C = 2 * Math.PI * R;
+  const bookHref = !p.b ? '' : p.bm === 'text' ? smsHref(p.b, `Hi${p.a ? ' ' + p.a : ''}! It’s ${p.n}, I’d like to book my lash refill 💕`) : p.b;
+  const bookLabel = p.bm === 'text' ? 'Text to book' : p.bm === 'dm' ? 'DM to book' : 'Book my refill';
+  let checks = {}; const ckKey = 'fillcard.pp.' + enc.slice(-24); try { checks = JSON.parse(localStorage.getItem(ckKey)) || {}; } catch {}
+  app.className = '';
+  app.innerHTML = `<div class="pp view">
+    <div class="hero rise" style="--i:0"><div class="eyebrow">${esc(who)}</div><h1>${esc(p.n)}’s lash passport</h1><div class="small" style="opacity:.88">${esc(p.st || '')} · ${esc(p.sty || '')} · applied ${fmtDate(p.d, { month: 'long', day: 'numeric' })}</div></div>
+    <div class="card ringcard rise" style="--i:1"><div class="bigring"><svg viewBox="0 0 168 168"><defs><linearGradient id="rg2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:var(--accent)"/><stop offset="1" style="stop-color:var(--gold)"/></linearGradient></defs><circle class="trk" cx="84" cy="84" r="${R}"/><circle class="prg" cx="84" cy="84" r="${R}" stroke-dasharray="${C.toFixed(1)}" stroke-dashoffset="${C.toFixed(1)}" data-off="${(C * (1 - pct)).toFixed(1)}" transform="rotate(-90 84 84)"/></svg>
+      <div>${left > 0 ? `<b data-count="${left}">0</b><span>${ap ? 'days until your appointment' : 'days until refill'}</span>` : left === 0 ? `<b>Today</b><span>${ap ? 'appointment day' : 'refill day'}</span>` : `<b>${-left}</b><span>days overdue</span>`}</div></div>
+      <div style="margin-top:12px;font:600 18px var(--serif)">${fmtLong(target)}${ap?.time ? ' · ' + fmtTime(ap.time) : ''}</div>
+      <div class="small muted">${ap ? 'You’re booked ✓ Add it to your calendar so you don’t forget.' : left >= 0 ? 'Book a few days ahead to get your spot.' : 'Your lashes are ready for a refill. Book now.'}</div>
+      ${p.dep ? `<a class="btn ghost sm" style="margin-top:8px" href="${esc(p.dep)}" target="_blank" rel="noopener">${icon('heart', 16)} Pay deposit</a>` : ''}</div>
+    ${zones.length ? `<div class="card rise" style="--i:2"><h2>Your lash map</h2><div class="mapwrap">${mapSVG(zones, { grow: true })}</div>${legendHTML(zones)}<p class="small muted" style="margin:10px 0 0">${zones.map(z => z.len).join(' · ')} mm${p.dia ? ` · ${esc(p.dia)} diameter` : ''}. Show this to any artist if you need a touch-up while traveling.</p></div>` : ''}
+    ${p.ac?.length ? `<div class="card rise" style="--i:3"><h2>Aftercare checklist</h2><p class="small muted" style="margin:-6px 0 6px">Tap to tick off — it remembers on this phone.</p><ul class="after">${p.ac.map((a, i) => `<li class="${checks[i] ? 'on' : ''}" data-act="ck" data-i="${i}"><span class="cb">${icon('check', 14, 3)}</span><span>${esc(a)}</span></li>`).join('')}</ul></div>` : ''}
+    ${p.ig ? `<a class="btn block rise press" style="--i:4;white-space:normal" href="https://instagram.com/${esc(p.ig)}" target="_blank" rel="noopener">${icon('ig', 18)} Tag @${esc(p.ig)} when you post your lashes</a>` : ''}
+    <div class="foot">Bookmark this page or add it to your Home Screen.<br>Lash passport by <a href="${esc(location.href.split('#')[0])}">Fillcard</a></div></div>
+    <div class="ppbar"><div class="in">${ap
+      ? `<button class="btn primary press" data-act="ics">${icon('cal', 18)} Add to calendar</button>${bookHref ? `<a class="btn press" href="${esc(bookHref)}" target="_blank" rel="noopener">Reschedule</a>` : '<span></span>'}`
+      : `${bookHref ? `<a class="btn primary press" href="${esc(bookHref)}" target="_blank" rel="noopener">${icon(p.bm === 'text' ? 'msg' : p.bm === 'dm' ? 'ig' : 'cal', 18)} ${bookLabel}</a>` : '<span></span>'}<button class="btn press" data-act="ics">${icon('bell', 18)} Remind me</button>`}</div></div>`;
+  app._passport = p; app._ckKey = ckKey; app._checks = checks;
+  liftFixed(); afterRender(app);
+}
+
+function bookingFieldsHTML(s) {
+  const mode = s.bookingMode || 'link';
+  return `<div class="field"><span>How do clients book with you?</span><div class="seg" role="group" aria-label="Booking method">${[['link', 'Booking app'], ['text', 'Text me'], ['dm', 'Instagram DM']].map(([k, l]) => `<button data-act="bookingMode" data-v="${k}" aria-pressed="${mode === k}">${l}</button>`).join('')}</div></div>
+  ${mode === 'link' ? `<label class="field"><span>Booking link</span><input type="url" data-s="booking" value="${esc(s.booking)}" placeholder="https://"></label>
+    <details class="more" style="margin:-8px 0 6px"><summary>${icon('chevR', 14)} Where do I find my booking link?</summary><div class="small" style="color:var(--ink-2);line-height:1.65;padding-bottom:6px">
+      <b>Easiest:</b> copy the “Book” link from your Instagram profile.<br><b>GlossGenius:</b> your booking website address (Settings → Website).<br><b>StyleSeat:</b> Menu → Marketing Suite → Promote Profile → Copy.<br><b>Square:</b> your Square Appointments online booking site.<br><b>Vagaro, Booksy, Acuity, Fresha:</b> look for “share profile” or “online booking link”.</div></details>`
+  : mode === 'text' ? `<label class="field"><span>Your business phone</span><input type="tel" data-s="phone" value="${esc(s.phone)}" placeholder="(555) 555-0123"></label><p class="small muted" style="margin:-4px 0 12px">Clients tap “Text to book” and a pre-written text to you opens.</p>`
+  : `<p class="small muted" style="margin:0 0 12px">Clients tap “DM to book” and your Instagram DMs open. ${s.instagram ? `Using @${esc(s.instagram)}.` : 'Add your Instagram handle below.'}</p>`}
+  <label class="field"><span>Deposit / payment link <span class="hint">Venmo, Cash App, PayPal, Square · optional</span></span><input type="url" data-s="depositLink" value="${esc(s.depositLink)}" placeholder="https://venmo.com/u/yourname"></label>`;
+}
+
+/* ---------- Consent ---------- */
+let consentDraft = null;
+function viewConsent(cid, next) {
+  setTab('clients');
+  const c = getClient(cid); if (!c) return notFound();
+  if (c.consent && next !== 'new' && next !== 'visit') return viewConsentSigned(c);
+  consentDraft = { answers: {}, details: '' };
+  mount(`<div class="wiz-head"><div class="row"><a class="iconbtn press" href="#/client/${c.id}" aria-label="Close">${icon('x', 18)}</a><div class="grow wiz-title">Consent · ${esc(firstName(c.name))}</div><span style="width:42px"></span></div></div>
+    ${rise(`<div class="note">${icon('heart', 18)}<span>Hand the phone to <b>${esc(firstName(c.name))}</b> to fill this in. It takes about a minute.</span></div>`, 0)}
+    ${rise(`<div class="card"><h2>A few quick questions</h2>${CONSENT_QS.map(([k, q]) => `<div class="cq"><div>${esc(q)}</div><div class="seg yn">${['No', 'Yes'].map(a => `<button data-act="cq" data-k="${k}" data-v="${a}" aria-pressed="false">${a}</button>`).join('')}</div></div>`).join('')}
+      <label class="field" id="cqDetails" hidden style="margin:12px 0 0"><span>Please tell us more</span><input type="text" id="cqText" placeholder="e.g. allergic to latex"></label></div>`, 1)}
+    ${rise(`<div class="card"><h2>Consent</h2><div class="consent-text">${esc(S().consentText)}</div>
+      <label class="agree"><input type="checkbox" id="agree"><span>I have read and agree to the above</span></label></div>`, 2)}
+    ${rise(`<div class="card"><label class="field"><span>Full name</span><input type="text" id="printed" value="${esc(c.name)}" autocomplete="name"></label>
+      <div class="field" style="margin:0"><div class="row" style="justify-content:space-between;margin-bottom:6px"><span style="font-size:12.5px;font-weight:600;color:var(--ink-2)">Signature</span><button class="btn ghost sm" data-act="sigClear" style="min-height:26px;padding:0 6px">Clear</button></div>
+      <canvas id="sig" class="sigpad" aria-label="Sign here with your finger"></canvas><div class="small muted" style="margin-top:6px">Sign with your finger · ${fmtDate(todayISO(), { month: 'long', day: 'numeric', year: 'numeric' })}</div></div></div>`, 3)}
+    <div class="wiz-pad"></div>
+    <div class="wiz-foot"><div class="wrap">${next === 'visit' ? `<a class="btn press" href="#/visit/new/${c.id}" style="flex:0 0 auto">Skip for now</a>` : ''}<button class="btn primary grow press" id="consentBtn" data-act="consentSave" data-next="${next === 'visit' ? 'visit' : ''}" disabled>${icon('check', 18)} Sign & save</button></div></div>`, { focus: true });
+  bindSigPad();
+  $('#agree').onchange = updateConsentBtn; $('#printed').oninput = updateConsentBtn;
+  $('#cqText').oninput = e => { consentDraft.details = e.target.value; };
+}
+function bindSigPad() {
+  const cv = $('#sig'); if (!cv) return;
+  let ctx = null, drawing = false, last = null;
+  const size = () => { const r = cv.getBoundingClientRect(), dpr = window.devicePixelRatio || 1; cv.width = r.width * dpr; cv.height = r.height * dpr; ctx = cv.getContext('2d'); ctx.scale(dpr, dpr); ctx.lineWidth = 2.6; ctx.lineCap = ctx.lineJoin = 'round'; ctx.strokeStyle = '#231B1D'; };
+  const pos = e => { const r = cv.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; };
+  cv.onpointerdown = e => { if (!ctx) size(); drawing = true; last = pos(e); try { cv.setPointerCapture(e.pointerId); } catch {} e.preventDefault(); };
+  cv.onpointermove = e => { if (!drawing) return; const p = pos(e); ctx.beginPath(); ctx.moveTo(last.x, last.y); ctx.lineTo(p.x, p.y); ctx.stroke(); last = p; if (!cv.signed) { cv.signed = true; updateConsentBtn(); } };
+  cv.onpointerup = cv.onpointercancel = () => { drawing = false; };
+  cv.clearSig = () => { if (ctx) ctx.clearRect(0, 0, cv.width, cv.height); cv.signed = false; updateConsentBtn(); };
+}
+function updateConsentBtn() { const b = $('#consentBtn'); if (b) b.disabled = !($('#sig')?.signed && $('#agree')?.checked && $('#printed')?.value.trim() && Object.keys(consentDraft?.answers || {}).length === CONSENT_QS.length); }
+function viewConsentSigned(c) {
+  const k = c.consent, s = S();
+  mount(`${rise(`<div class="noprint" style="margin-top:14px"><a href="#/client/${c.id}" class="btn ghost sm" style="padding-left:0">${icon('chevL', 18)} ${esc(c.name)}</a></div>`, 0)}
+    ${rise(`<div class="card"><div class="eyebrow">${esc(s.studio || s.artist || 'Lash studio')}</div><h1 style="margin:4px 0 2px">Lash extension consent</h1>
+      <p class="sub">${esc(c.name)} · signed ${fmtDate(k.date, { month: 'long', day: 'numeric', year: 'numeric' })}</p>
+      <div class="kv">${CONSENT_QS.map(([key, q]) => `<div style="grid-column:1/-1"><span>${esc(q)}</span><b>${esc(k.answers[key] || '—')}</b></div>`).join('')}${k.details ? `<div style="grid-column:1/-1"><span>Details</span><b>${esc(k.details)}</b></div>` : ''}</div>
+      <div class="consent-text" style="margin-top:14px;max-height:none">${esc(k.text)}</div>
+      <div style="margin-top:16px"><div class="eyebrow">Signature</div><img data-photo="${k.sigId}" alt="Signature of ${esc(k.printed)}" class="sigimg"><div style="font-weight:600">${esc(k.printed)}</div></div></div>`, 1)}
+    ${rise(`<div class="grid2 noprint"><button class="btn primary press" data-act="print">${icon('download', 18)} Print / save PDF</button><a class="btn press" href="#/consent/${c.id}/new">${icon('edit', 18)} Sign a new form</a></div><div style="height:20px"></div>`, 2)}`);
+  hydratePhotos(app);
+}
+
+/* ---------- Try-on: her lash map over a photo of her eye ---------- */
+let tryState = null, tryDrag = null;
+function tryOnSVG(zones, real) {
+  const g = mapGeometry(zones, 12);
+  return `<svg viewBox="0 0 ${MAP_W} ${MAP_H}" aria-hidden="true">${g.lashes.map(l => `<path d="M${l.s.x.toFixed(1)},${l.s.y.toFixed(1)} Q${l.c.x.toFixed(1)},${l.c.y.toFixed(1)} ${l.e.x.toFixed(1)},${l.e.y.toFixed(1)}" stroke="${real ? '#1a1113' : CURL_COLOR[l.curl]}" stroke-width="${real ? 1.3 : 1.7}" stroke-linecap="round" fill="none" opacity="${real ? .85 : 1}"/>`).join('')}
+    <path d="M${g.P0.x},${g.P0.y} Q${g.P1.x},${g.P1.y} ${g.P2.x},${g.P2.y}" fill="none" stroke="#fff" stroke-width="1.6" stroke-dasharray="5 5" opacity=".95"/></svg>`;
+}
+async function tryOnSheet() {
+  const before = (draft.photos || []).find(p => p.kind === 'before');
+  tryState = { photoId: null, x: .5, y: .5, size: .8, rot: 0, flip: false, real: true };
+  openSheet('Preview on her eye', `
+    <div class="tryon" id="tryStage"><img id="tryImg" alt="Her eye" hidden><div class="tryov" id="tryOv" hidden></div>
+      <label class="tryempty" id="tryEmpty">${icon('camera', 30)}<b>Take a photo of her eye</b><span class="small muted">Straight on, eye open, good light</span><input type="file" accept="image/*" capture="environment" data-try-file></label></div>
+    <p class="small muted" style="margin:10px 0">Drag the lashes so the white dashed line sits on her lash line.</p>
+    <div class="field"><span>Size</span><div class="range"><input type="range" id="trySize" min="30" max="160" value="80" style="--v:56%"></div></div>
+    <div class="field"><span>Tilt</span><div class="range"><input type="range" id="tryRot" min="-35" max="35" value="0" style="--v:50%"></div></div>
+    <div class="chips"><button class="chip" data-act="tryFlip" aria-pressed="false">Mirror for other eye</button><button class="chip" data-act="tryReal" aria-pressed="true">Realistic lashes</button><label class="chip" style="position:relative;display:inline-flex;align-items:center;gap:6px">${icon('camera', 14)} New photo<input type="file" accept="image/*" capture="environment" data-try-file style="position:absolute;inset:0;opacity:0"></label></div>
+    <button class="btn primary block lg press" data-act="trySave" style="margin-top:14px">${icon('sparkle', 18)} Save preview to this visit</button>`);
+  const pct = (el, lo, hi) => el.style.setProperty('--v', ((el.value - lo) / (hi - lo) * 100) + '%');
+  $('#trySize').oninput = e => { tryState.size = e.target.value / 100; pct(e.target, 30, 160); paintTry(true); };
+  $('#tryRot').oninput = e => { tryState.rot = +e.target.value; pct(e.target, -35, 35); paintTry(true); };
+  if (before) await loadTryPhoto(before.id);
+}
+async function loadTryPhoto(id) {
+  const u = await photoURL(id); if (!u || !$('#tryImg')) return;
+  tryState.photoId = id; const img = $('#tryImg'); img.src = u; img.hidden = false; $('#tryEmpty').hidden = true; $('#tryOv').hidden = false; paintTry();
+}
+function paintTry(styleOnly) {
+  const ov = $('#tryOv'), t = tryState; if (!ov || !t) return;
+  ov.style.left = t.x * 100 + '%'; ov.style.top = t.y * 100 + '%'; ov.style.width = t.size * 100 + '%';
+  ov.style.transform = `translate(-50%,-50%) rotate(${t.rot}deg) scaleX(${t.flip ? -1 : 1})`;
+  if (!styleOnly) ov.innerHTML = tryOnSVG(draft.zones, t.real);
+}
+function renderTry() {
+  const N = 1080, cv = document.createElement('canvas'), x = cv.getContext('2d'), img = $('#tryImg'), t = tryState;
+  cv.width = cv.height = N;
+  const s = Math.max(N / img.naturalWidth, N / img.naturalHeight);
+  x.drawImage(img, (N - img.naturalWidth * s) / 2, (N - img.naturalHeight * s) / 2, img.naturalWidth * s, img.naturalHeight * s);
+  const g = mapGeometry(draft.zones, 12), k = t.size * N / MAP_W;
+  x.save(); x.translate(t.x * N, t.y * N); x.rotate(t.rot * Math.PI / 180); x.scale(t.flip ? -1 : 1, 1); x.scale(k, k); x.translate(-MAP_W / 2, -MAP_H / 2);
+  x.lineCap = 'round';
+  for (const l of g.lashes) { x.strokeStyle = t.real ? 'rgba(26,17,19,.85)' : CURL_COLOR[l.curl]; x.lineWidth = t.real ? 1.3 : 1.7; x.beginPath(); x.moveTo(l.s.x, l.s.y); x.quadraticCurveTo(l.c.x, l.c.y, l.e.x, l.e.y); x.stroke(); }
+  x.restore();
+  const label = `${draft.style} · ${mapSummary(draft).curls} curl · ${mapSummary(draft).range}`;
+  x.font = '600 30px "Inter", system-ui, sans-serif'; const w = x.measureText(label).width + 40;
+  x.fillStyle = 'rgba(20,12,15,.55)'; roundRect(x, 30, N - 84, w, 54, 27); x.fill(); x.fillStyle = '#fff'; x.fillText(label, 50, N - 47);
+  return new Promise(r => cv.toBlob(r, 'image/jpeg', .88));
+}
+document.addEventListener('pointerdown', e => {
+  if (!e.target.closest('#tryOv') || !tryState) return;
+  const r = $('#tryStage').getBoundingClientRect();
+  tryDrag = { sx: e.clientX, sy: e.clientY, x: tryState.x, y: tryState.y, w: r.width }; e.preventDefault();
+});
+window.addEventListener('pointermove', e => {
+  if (!tryDrag) return;
+  tryState.x = Math.min(1, Math.max(0, tryDrag.x + (e.clientX - tryDrag.sx) / tryDrag.w));
+  tryState.y = Math.min(1, Math.max(0, tryDrag.y + (e.clientY - tryDrag.sy) / tryDrag.w));
+  paintTry(true);
+});
+window.addEventListener('pointerup', () => { tryDrag = null; });
+
+/* ---------- Eye-shape style guide ---------- */
+function eyeGuideSheet(shape) {
+  const c = getClient(draft.clientId); shape = shape || c.eyeShape || '';
+  const info = EYE_SHAPES[shape];
+  openSheet('Style guide by eye shape', `<p class="small muted" style="margin:-4px 0 12px">Pick ${esc(firstName(c.name))}’s eye shape for a starting point. General guidance; trust your eye.</p>
+    <div class="chips">${Object.keys(EYE_SHAPES).map(k => `<button class="chip" data-act="eyePick" data-v="${k}" aria-pressed="${k === shape}">${k}</button>`).join('')}</div>
+    ${info ? `<div class="note" style="margin-top:14px">${icon('sparkle', 18)}<span>${esc(info.tip)}</span></div>
+      <div class="grid2">${info.styles.map((st, i) => { const cu = info.curls[i] || info.curls[0]; return `<button class="preset press" style="width:auto" data-act="eyeApply" data-style="${st}" data-curl="${cu}">${mapSVG(makeZones(st, 7, cu), { captions: false, labels: false })}${st} · ${cu} curl</button>`; }).join('')}</div>
+      <p class="small muted" style="margin:10px 0 0">Tap a look to put it on the map. You can still adjust every zone.</p>` : ''}`);
+}
+
+function notFound() { mount(`<h1>Not found</h1><p class="sub">That record doesn’t exist on this phone.</p><a class="btn press" href="#/">Go to Today</a>`); }
+
+/* ---------- sheets ---------- */
+function openSheet(title, html) { const d = $('#dlg'); d.classList.remove('closing'); $('#dlgTitle').textContent = title; $('#dlgBody').innerHTML = html; if (!d.open) d.showModal(); afterRender(d); return d; }
+function closeSheet() { const d = $('#dlg'); if (!d.open) return; if (reduced) return d.close(); d.classList.add('closing'); setTimeout(() => { d.close(); d.classList.remove('closing'); }, 210); }
+$('#dlg').addEventListener('click', e => { if (e.target === e.currentTarget) closeSheet(); });
+$('#dlg').addEventListener('cancel', e => { e.preventDefault(); closeSheet(); });
+function clientForm(c = {}) {
+  openSheet(c.id ? 'Edit client' : 'New client', `<form id="cf">
+    <label class="field"><span>Name</span><input type="text" name="name" required value="${esc(c.name)}" autocomplete="off" placeholder="Her full name"></label>
+    <div class="grid2"><label class="field"><span>Phone</span><input type="tel" name="phone" value="${esc(c.phone)}" placeholder="(555) 555-0123"></label>
+    <label class="field"><span>Instagram</span><input type="text" name="instagram" value="${esc(c.instagram)}" placeholder="handle"></label></div>
+    <label class="field"><span>Allergies / sensitivities</span><input type="text" name="allergies" value="${esc(c.allergies)}" placeholder="e.g. sensitive to fast-dry glue"></label>
+    <label class="field"><span>Patch test date</span><input type="date" name="patchTest" value="${esc(c.patchTest)}"></label>
+    <label class="field"><span>Notes & preferences</span><textarea name="notes" placeholder="Likes wispy, sleeps on right side…">${esc(c.notes)}</textarea></label>
+    <button class="btn primary block lg press">${c.id ? 'Save changes' : 'Add client'}</button></form>`);
+  $('#cf').onsubmit = e => {
+    e.preventDefault(); const f = Object.fromEntries(new FormData(e.target)); f.instagram = (f.instagram || '').replace(/^@/, '').trim(); f.name = f.name.trim();
+    if (!f.name) return;
+    const isNew = !c.id;
+    if (isNew) { const n = { id: uid(), createdAt: todayISO(), ...f }; db.clients.push(n); c = n; } else Object.assign(getClient(c.id), f);
+    save(); closeSheet(); toast(isNew ? 'Client added' : 'Saved'); const h = '#/client/' + c.id; if (location.hash === h) route(); else location.hash = h;
+  };
+}
+function remindSheet(cid, q) {
+  const c = getClient(cid), msg = fill(S().reminder, c), st = clientStatus(c);
+  openSheet(q ? `Reminder ${q.idx + 1} of ${q.ids.length}` : `Remind ${firstName(c.name)}`, `
+    <div class="row" style="margin-bottom:12px">${avatar(c, 48)}<div class="grow"><div class="name">${esc(c.name)}</div><span class="pill ${st.cls}"><i></i>${esc(st.label)}</span></div></div>
+    <textarea id="rmsg" rows="4">${esc(msg)}</textarea>
+    <div class="grid2" style="margin-top:12px">${c.phone ? `<a class="btn primary press" id="rsms" data-act="markReminded" data-id="${c.id}" href="${smsHref(c.phone, msg)}">${icon('msg', 18)} Open Messages</a>` : ''}
+      <button class="btn ${c.phone ? '' : 'primary'} press" data-act="copyRemind" data-id="${c.id}">${icon('copy', 18)} Copy for DM</button></div>
+    ${c.instagram ? `<a class="btn ghost block" style="margin-top:6px" href="https://ig.me/m/${esc(c.instagram)}" target="_blank" rel="noopener">${icon('ig', 18)} Open DM with @${esc(c.instagram)}</a>` : ''}
+    ${q ? `<div class="row" style="margin-top:14px"><button class="btn ghost press" data-act="qNext" data-skip="1">Skip</button><span class="grow"></span><button class="btn press" data-act="qNext">${q.idx + 1 < q.ids.length ? 'Next client' : 'Done'} ${icon('chevR', 18)}</button></div>` : ''}`);
+  $('#rmsg').oninput = e => { const a = $('#rsms'); if (a) a.href = smsHref(c.phone, e.target.value); };
+}
+function setupSheet() {
+  const s = S();
+  openSheet('Your studio', `<p class="small muted" style="margin:-4px 0 14px">This goes on every refill card. You can change it any time.</p>
+    <div class="grid2"><label class="field"><span>Your name</span><input type="text" data-s="artist" value="${esc(s.artist === 'Jess' ? '' : s.artist)}" placeholder="Jess"></label>
+    <label class="field"><span>Studio name</span><input type="text" data-s="studio" value="${esc(s.studio === 'Jess Lash Studio' ? '' : s.studio)}" placeholder="Jess Lash Studio"></label></div>
+    <div id="bookBox">${bookingFieldsHTML({ ...s, booking: s.booking.includes('example.com') ? '' : s.booking })}</div>
+    <label class="field"><span>Instagram</span><input type="text" data-s="instagram" value="${esc(s.instagram === 'jesslashstudio' ? '' : s.instagram)}" placeholder="yourstudio"></label>
+    <div class="field"><span>Brand color</span>${swatchesHTML(s.color)}</div>
+    <button class="btn primary block lg press" data-act="finishSetup">${icon('sparkle', 18)} Let’s go</button>`);
+  bindSettingsInputs($('#dlg'));
+}
+
+/* ---------- data import/export ---------- */
+async function exportData() {
+  const photos = {};
+  try { for (const k of await idb.keys()) { const b = await idb.get(k); photos[k] = await new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result); fr.readAsDataURL(b); }); } } catch {}
+  db.settings.lastBackup = todayISO(); save();
+  downloadBlob(new Blob([JSON.stringify({ app: 'fillcard', version: 1, exportedAt: new Date().toISOString(), db, photos })], { type: 'application/json' }), `fillcard-backup-${todayISO()}.json`);
+  toast('Backup downloaded');
+}
+async function importData(file) {
+  if (!file) return;
+  try {
+    const d = JSON.parse(await file.text()); if (d.app !== 'fillcard' || !d.db?.clients) throw 0;
+    if (!confirm(`Replace everything on this phone with the backup (${d.db.clients.length} clients)?`)) return;
+    db = d.db; db.settings = { ...DEFAULT_SETTINGS, ...db.settings }; save();
+    await idb.clear(); for (const [k, u] of Object.entries(d.photos || {})) await idb.put(k, await (await fetch(u)).blob());
+    urlCache.clear(); applyBrand(); toast('Backup restored'); location.hash = '#/';
+  } catch { toast('That file isn’t a Fillcard backup', false); }
+}
+
+/* ---------- actions ---------- */
+function markReminded(id) { const c = getClient(id); if (c) { c.lastReminded = todayISO(); save(); } }
+async function act(name, el) {
+  const v = draft;
+  switch (name) {
+    case 'closeDlg': closeSheet(); break;
+    case 'dismissOnboard': db.settings.onboarded = true; save(); route(); break;
+    case 'setup': setupSheet(); break;
+    case 'finishSetup':
+      $$('#dlg input[type=text][data-s], #dlg input[type=url][data-s], #dlg input[type=tel][data-s]').forEach(i => { db.settings[i.dataset.s] = i.dataset.s === 'instagram' ? i.value.replace(/^@/, '').trim() : i.value.trim(); });
+      db.settings.onboarded = true; save(); closeSheet(); burst(el); toast('Studio ready'); setTimeout(route, 250); break;
+    case 'color': db.settings.color = el.dataset.v; save(); applyBrand(); $$('.sw[data-v]', el.closest('.swatches')).forEach(b => b.setAttribute('aria-pressed', b === el)); haptic(); break;
+    case 'refillDefault': db.settings.refillDays = +el.dataset.v; save(); $$('[data-act="refillDefault"]').forEach(b => b.setAttribute('aria-pressed', b === el)); break;
+    case 'install': if (installEvt) { installEvt.prompt(); installEvt = null; } break;
+    case 'filter': clientFilter = el.dataset.v; viewClients($('#q')?.value || ''); break;
+    case 'newClient': clientForm(); break;
+    case 'editClient': clientForm(getClient(el.dataset.id)); break;
+    case 'deleteClient': {
+      const c = getClient(el.dataset.id); if (!confirm(`Delete ${c.name} and all her visits? This can’t be undone.`)) return;
+      for (const x of visitsOf(c.id)) for (const p of x.photos || []) idb.del(p.id).catch(() => {});
+      db.visits = db.visits.filter(x => x.clientId !== c.id); db.clients = db.clients.filter(x => x.id !== c.id); save(); toast('Client deleted'); location.hash = '#/clients'; break;
+    }
+    case 'quickClient': {
+      const n = $('#quickName').value.trim(); if (!n) { $('#quickName').focus(); return; }
+      const c = { id: uid(), name: n, phone: '', instagram: '', allergies: '', patchTest: '', notes: '', createdAt: todayISO() }; db.clients.push(c); save(); location.hash = '#/consent/' + c.id + '/visit'; break;
+    }
+    case 'remind': queue = null; remindSheet(el.dataset.id); break;
+    case 'queue': {
+      const ids = db.clients.filter(c => ['overdue', 'lapsed'].includes(clientStatus(c).kind) && !remindedToday(c)).map(c => c.id);
+      if (!ids.length) return; queue = { ids, idx: 0 }; remindSheet(ids[0], queue); break;
+    }
+    case 'qNext': {
+      if (!queue) return closeSheet();
+      if (!el.dataset.skip) markReminded(queue.ids[queue.idx]);
+      queue.idx++;
+      if (queue.idx >= queue.ids.length) { queue = null; closeSheet(); toast('Reminders done'); route(); } else remindSheet(queue.ids[queue.idx], queue);
+      break;
+    }
+    case 'markReminded': markReminded(el.dataset.id); break;
+    case 'copyRemind': markReminded(el.dataset.id); copyText($('#rmsg').value, 'Copied — paste it in her DMs'); break;
+    case 'goStep': { const n = +el.dataset.i; if (n === step) return; renderStep(n, n > step ? 'fwd' : 'back'); haptic(); break; }
+    case 'zone': sel = +el.dataset.i; haptic(); paintZones(false); break;
+    case 'len': v.zones[sel].len = clampLen(v.zones[sel].len + +el.dataset.d); dirty = true; haptic(); paintZones(); break;
+    case 'curl': v.zones[sel].curl = el.dataset.v; v.curl = el.dataset.v; dirty = true; haptic(); paintZones(false); break;
+    case 'curlAll': v.zones.forEach(z => z.curl = v.zones[sel].curl); dirty = true; paintZones(false); toast(`${v.zones[sel].curl} curl on every zone`); break;
+    case 'allLen': v.zones.forEach(z => z.len = clampLen(z.len + +el.dataset.d)); dirty = true; paintZones(); break;
+    case 'zonesN': { const n = Math.max(4, Math.min(10, v.zones.length + +el.dataset.d)); v.zones = resizeZones(v.zones, n); sel = Math.min(sel, n - 1); dirty = true; paintZones(false); break; }
+    case 'preset': {
+      const curls = v.zones.map(z => z.curl); v.style = el.dataset.v;
+      v.zones = presetLengths(v.style, v.zones.length).map((len, i) => ({ len, curl: curls[i] || v.curl })); dirty = true; haptic();
+      $$('[data-act="preset"]').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === v.style)); paintZones(); break;
+    }
+    case 'set': {
+      const k = el.dataset.k, val = k === 'refillDays' ? +el.dataset.v : el.dataset.v; v[k] = val; dirty = true; haptic();
+      if (k === 'service') { renderStep(step, ''); break; }
+      $$(`[data-act="set"][data-k="${k}"]`).forEach(b => b.setAttribute('aria-pressed', b.dataset.v === String(val)));
+      if (k === 'refillDays') paintDue();
+      break;
+    }
+    case 'saveVisit': {
+      v.nextDue = addDays(v.date, v.refillDays || S().refillDays); v.price = v.price === '' ? '' : Number(v.price);
+      delete v.prefilledFrom; delete v._new; const i = db.visits.findIndex(x => x.id === v.id);
+      if (i >= 0) db.visits[i] = v; else db.visits.push(v);
+      save(); dirty = false; burst(el); haptic(20); toast('Visit saved');
+      setTimeout(() => { location.hash = '#/card/' + v.id; }, reduced ? 0 : 420); break;
+    }
+    case 'deleteVisit': {
+      if (!confirm('Delete this visit?')) return;
+      for (const p of v.photos || []) idb.del(p.id).catch(() => {});
+      db.visits = db.visits.filter(x => x.id !== v.id); save(); dirty = false; toast('Visit deleted'); location.hash = '#/client/' + v.clientId; break;
+    }
+    case 'shareCard': {
+      const img = $('#cardImg'), b = img?._blob; if (!b) return toast('Card is still rendering…', false);
+      const vv = getVisit(location.hash.split('/')[2]), c = getClient(vv.clientId), fname = `${firstName(c.name).toLowerCase()}-lash-card.png`;
+      const file = new File([b], fname, { type: 'image/png' });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) { try { await navigator.share({ files: [file], title: 'Your lash refill card' }); } catch {} }
+      else { downloadBlob(b, fname); toast('Card downloaded'); }
+      break;
+    }
+    case 'copyLink': copyText(passportLink(getVisit(location.hash.split('/')[2])), 'Passport link copied'); break;
+    case 'copyMsg': { const vv = getVisit(location.hash.split('/')[2]); copyText(fill(S().passportMsg, getClient(vv.clientId), { link: passportLink(vv) }), 'Message copied — paste it in her DMs'); break; }
+    case 'ics': { downloadBlob(new Blob([icsFor(app._passport)], { type: 'text/calendar' }), 'lash-refill.ics'); toast('Reminder added — check your calendar'); break; }
+    case 'ck': {
+      const i = el.dataset.i, on = !el.classList.contains('on'); el.classList.toggle('on', on); haptic();
+      app._checks[i] = on; try { localStorage.setItem(app._ckKey, JSON.stringify(app._checks)); } catch {}
+      break;
+    }
+    case 'bookingMode': {
+      db.settings.bookingMode = el.dataset.v; save(); haptic();
+      const box = el.closest('#bookBox'); box.innerHTML = bookingFieldsHTML(box.closest('dialog') ? { ...S(), booking: S().booking.includes('example.com') ? '' : S().booking } : S()); bindSettingsInputs(box); break;
+    }
+    case 'apptDue': draft.nextAppt = { date: addDays(draft.date, draft.refillDays), time: draft.nextAppt?.time || '' }; dirty = true; renderStep(2, ''); break;
+    case 'apptClear': draft.nextAppt = null; dirty = true; renderStep(2, ''); break;
+    case 'tryOn': tryOnSheet(); break;
+    case 'tryFlip': tryState.flip = !tryState.flip; el.setAttribute('aria-pressed', tryState.flip); paintTry(true); haptic(); break;
+    case 'tryReal': tryState.real = !tryState.real; el.setAttribute('aria-pressed', tryState.real); paintTry(); haptic(); break;
+    case 'trySave': {
+      if (!tryState?.photoId) return toast('Take a photo of her eye first', false);
+      const blob = await renderTry(), id = 'ph_' + uid(); await idb.put(id, blob);
+      const old = (draft.photos || []).find(p => p.kind === 'preview'); if (old) idb.del(old.id).catch(() => {});
+      draft.photos = [...(draft.photos || []).filter(p => p.kind !== 'preview'), { id, kind: 'preview' }]; dirty = true;
+      burst(el); haptic(20); closeSheet(); toast('Preview saved to this visit'); break;
+    }
+    case 'eyeGuide': eyeGuideSheet(); break;
+    case 'eyePick': { const c = getClient(draft.clientId); c.eyeShape = el.dataset.v; save(); haptic(); eyeGuideSheet(el.dataset.v); break; }
+    case 'eyeApply': {
+      const cu = el.dataset.curl; draft.style = el.dataset.style; draft.curl = cu;
+      draft.zones = presetLengths(draft.style, draft.zones.length).map(len => ({ len, curl: cu })); dirty = true;
+      closeSheet(); $$('[data-act="preset"]').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === draft.style)); paintZones(); toast(`${draft.style} · ${cu} curl applied`); break;
+    }
+    case 'cq': {
+      consentDraft.answers[el.dataset.k] = el.dataset.v; haptic();
+      $$(`[data-act="cq"][data-k="${el.dataset.k}"]`).forEach(b => b.setAttribute('aria-pressed', b === el));
+      $('#cqDetails').hidden = !Object.values(consentDraft.answers).includes('Yes'); updateConsentBtn(); break;
+    }
+    case 'sigClear': $('#sig')?.clearSig?.(); break;
+    case 'consentSave': {
+      const c = getClient(location.hash.split('/')[2]), cv = $('#sig');
+      if (!c || !cv?.signed || !$('#agree').checked) return;
+      const blob = await new Promise(r => cv.toBlob(r, 'image/png')), sigId = 'sig_' + uid(); await idb.put(sigId, blob);
+      if (c.consent?.sigId) idb.del(c.consent.sigId).catch(() => {});
+      c.consent = { date: todayISO(), answers: { ...consentDraft.answers }, details: consentDraft.details.trim(), text: S().consentText, printed: $('#printed').value.trim() || c.name, sigId };
+      if (c.consent.answers.allergy === 'Yes' && c.consent.details && !c.allergies) c.allergies = c.consent.details;
+      save(); burst(el); haptic(20); toast('Consent signed & saved');
+      const next = el.dataset.next === 'visit' ? '#/visit/new/' + c.id : '#/consent/' + c.id;
+      setTimeout(() => { location.hash = next; }, reduced ? 0 : 420); break;
+    }
+    case 'print': window.print(); break;
+    case 'exportData': exportData(); break;
+    case 'clearDemo': {
+      if (!confirm('Remove the demo clients?')) return;
+      const ids = new Set(db.clients.filter(c => c.demo).map(c => c.id));
+      db.clients = db.clients.filter(c => !ids.has(c.id)); db.visits = db.visits.filter(x => !ids.has(x.clientId));
+      if (db.settings.studio === 'Jess Lash Studio') Object.assign(db.settings, { artist: '', studio: '', booking: '', instagram: '' });
+      save(); viewSettings(); toast('Demo data removed'); break;
+    }
+    case 'wipe': if (confirm('Erase all clients, visits and photos on this phone?') && confirm('Really erase everything? Export a backup first if unsure.')) { localStorage.removeItem(KEY); await idb.clear().catch(() => {}); db = { settings: { ...DEFAULT_SETTINGS }, clients: [], visits: [] }; save(); location.hash = '#/'; route(); } break;
+  }
+}
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-act]'); if (!el) return;
+  if (el.tagName === 'BUTTON' || el.tagName === 'LI') e.preventDefault();
+  act(el.dataset.act, el);
+});
+document.addEventListener('input', e => {
+  const k = e.target.dataset?.k; if (!k || !draft) return;
+  draft[k] = e.target.value; dirty = true;
+  if (k === 'date') paintDue();
+});
+document.addEventListener('change', async e => {
+  if (e.target.matches?.('[data-try-file]') && e.target.files[0] && draft) {
+    try {
+      const blob = await compress(e.target.files[0]), id = 'ph_' + uid(); await idb.put(id, blob);
+      // The eye photo doubles as her "before" photo when she doesn't have one yet.
+      if (!(draft.photos || []).some(p => p.kind === 'before')) { draft.photos = [...(draft.photos || []), { id, kind: 'before' }]; dirty = true; }
+      await loadTryPhoto(id); haptic();
+    } catch { toast('Couldn’t read that photo', false); }
+    return;
+  }
+  const kind = e.target.dataset?.photoKind; if (!kind || !draft || !e.target.files[0]) return;
+  try {
+    const blob = await compress(e.target.files[0]), id = 'ph_' + uid(); await idb.put(id, blob);
+    const old = (draft.photos || []).find(p => p.kind === kind); if (old) idb.del(old.id).catch(() => {});
+    draft.photos = [...(draft.photos || []).filter(p => p.kind !== kind), { id, kind }]; dirty = true;
+    const box = e.target.closest('.photo'); box.querySelector('.ph')?.remove(); box.querySelector('img')?.remove();
+    const img = document.createElement('img'); img.alt = kind + ' photo'; img.src = await photoURL(id); box.prepend(img); haptic();
+  } catch { toast('Couldn’t read that photo', false); }
+});
+
+/* ---------- routing & boot ---------- */
+let lastHash = location.hash;
+function route() {
+  const h = location.hash.slice(1) || '/';
+  window.scrollTo(0, 0);
+  if (h.startsWith('p=')) return viewPassport(h.slice(2));
+  document.body.classList.remove('client-mode'); app.className = 'wrap'; applyBrand();
+  const [, view, a, b] = h.split('/');
+  if (!view) return viewHome();
+  if (view === 'clients') return viewClients();
+  if (view === 'client') return viewClient(a);
+  if (view === 'visit') return a === 'new' ? (b ? viewEditor('new', b) : viewPickClient()) : viewEditor(a);
+  if (view === 'card') return viewCard(a);
+  if (view === 'settings') return viewSettings();
+  if (view === 'consent') return viewConsent(a, b);
+  notFound();
+}
+window.addEventListener('hashchange', () => {
+  if (dirty && lastHash.includes('/visit/') && !confirm('Leave without saving this visit?')) { history.replaceState(null, '', lastHash); return; }
+  dirty = false; lastHash = location.hash; if ($('#dlg').open) $('#dlg').close(); route();
+});
+window.addEventListener('beforeunload', e => { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
+function applyBrand() {
+  const col = S().color; if (col) document.documentElement.style.setProperty('--accent', col);
+  const th = S().theme; if (th === 'auto') document.documentElement.removeAttribute('data-theme'); else document.documentElement.setAttribute('data-theme', th);
+}
+$('#themeBtn').onclick = () => {
+  const dark = matchMedia('(prefers-color-scheme: dark)').matches, cur = S().theme;
+  db.settings.theme = (cur === 'dark' || (cur === 'auto' && dark)) ? 'light' : 'dark'; save(); applyBrand(); haptic();
+};
+if (!localStorage.getItem(KEY)) save();
+route();
+if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(() => {});
+</script>
+</body>
+</html>

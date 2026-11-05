@@ -1,5 +1,5 @@
 // Network first so updates show up immediately; fall back to the cache when offline.
-const CACHE = 'fillcard-v2';
+const CACHE = 'fillcard-v3';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icon.svg'];
 
 self.addEventListener('install', e => {
